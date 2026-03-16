@@ -49,7 +49,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/plans', require('./routes/planRoutes'));
 app.use('/api/gyms', require('./routes/gymRoutes'));
-// app.use('/api/health', require('./routes/healthDataRoutes'));
+app.use('/api/health-data', require('./routes/healthDataRoutes'));
 // app.use('/api/workouts', require('./routes/workoutRoutes'));
 
 // 404 处理
