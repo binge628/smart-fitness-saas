@@ -50,7 +50,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/plans', require('./routes/planRoutes'));
 app.use('/api/gyms', require('./routes/gymRoutes'));
 app.use('/api/health-data', require('./routes/healthDataRoutes'));
-// app.use('/api/workouts', require('./routes/workoutRoutes'));
+app.use('/api/workouts', require('./routes/workoutRoutes'));
 
 // 404 处理
 app.use((req, res) => {
