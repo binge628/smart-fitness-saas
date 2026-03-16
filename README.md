@@ -50,10 +50,28 @@ npm run dev
 
 ### 后端启动
 
+**1. 配置数据库**
+
+首次运行需要先配置 PostgreSQL 数据库：
+
+```bash
+# macOS 安装 PostgreSQL
+brew install postgresql@16
+brew services start postgresql@16
+
+# 初始化数据库
+cd backend
+cp .env.example .env  # 或使用已创建的 .env
+./scripts/init-db.sh
+
+# 或手动初始化（参考 docs/DATABASE_SETUP.md）
+```
+
+**2. 启动后端服务**
+
 ```bash
 cd backend
 npm install
-cp .env.example .env  # 配置环境变量
 npm run dev
 ```
 
