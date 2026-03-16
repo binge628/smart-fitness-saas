@@ -2,6 +2,12 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './config/database';
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import planRoutes from './routes/planRoutes';
+import gymRoutes from './routes/gymRoutes';
+import healthDataRoutes from './routes/healthDataRoutes';
+import workoutRoutes from './routes/workoutRoutes';
 
 dotenv.config();
 
@@ -45,12 +51,12 @@ app.get('/health', async (req, res) => {
 });
 
 // API 路由前缀和基础路由
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/plans', require('./routes/planRoutes'));
-app.use('/api/gyms', require('./routes/gymRoutes'));
-app.use('/api/health-data', require('./routes/healthDataRoutes'));
-app.use('/api/workouts', require('./routes/workoutRoutes'));
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/gyms', gymRoutes);
+app.use('/api/health-data', healthDataRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 // 404 处理
 app.use((req, res) => {

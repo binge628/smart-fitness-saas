@@ -141,8 +141,8 @@ export const updatePlan = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description, duration_weeks, difficulty, target_goal, is_template, status } = req.body;
 
-    userId = req.user!.userId;
-    userRole = req.user!.role;
+    const userId = req.user!.userId;
+    const userRole = req.user!.role;
 
     // 检查计划是否存在
     const existingPlan = await pool.query('SELECT creator_id FROM fitness_plans WHERE id = $1', [id]);
