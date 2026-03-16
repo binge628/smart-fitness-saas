@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, Layout, theme } from 'antd';
+import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 
 // 布局组件
@@ -43,12 +43,14 @@ function App() {
     <ConfigProvider theme={customTheme} locale={zhCN}>
       <BrowserRouter>
         <Routes>
-          {/* 认证相关路由 */}
-          <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
-          <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
+          {/* 认证相关路由 - 嵌套路由 */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
 
           {/* 主应用路由 */}
-          <Route path="/*" element={<AppLayout><HomePage /></AppLayout>} />
+          <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
           <Route path="/plans" element={<AppLayout><PlansPage /></AppLayout>} />
           <Route path="/gyms" element={<AppLayout><GymsPage /></AppLayout>} />
           <Route path="/health" element={<AppLayout><HealthDataPage /></AppLayout>} />
