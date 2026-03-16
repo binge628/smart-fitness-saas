@@ -1,79 +1,81 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
+import React from 'react';
+import { Form, Input, Button, message, Alert } from 'antd';
+import { UserOutlined, LockOutlined, BugOutlined } from '@ant-design/icons';
+import { useNavigate, Navigate } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = React.useState(false);
 
-  const onFinish = async (values: { username: string; password: string }) => {
-    setLoading(true);
-    try {
-      const response = await authService.login(values);
-      if (response.success && response.data) {
-        // 保存 token 和用户信息
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        message.success('登录成功！');
-        navigate('/');
-      } else {
-        message.error(response.error || '登录失败，请重试');
-      }
-    } catch (error: any) {
-      message.error(error?.error || '登录失败，请重试');
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    console.log('🧪 测试模式登录');
+
+    const testUser = {
+      id: 'test-id-123456',
+      username: '测试用户',
+      email: 'test@example.com',
+      role: 'user',
+      status: 'active',
+      created_at: new Date().toISOString(),
+    };
+
+    localStorage.setItem('token', 'test-token-123456789');
+    localStorage.setItem('user', JSON.stringify(testUser));
+
+    message.success('登录成功！（测试模式）');
+    setShouldRedirect(true);
+
+    setTimeout(() => {
+      console.log('🔄 跳转到首页');
+      navigate('/');
+    }, 300);
   };
 
+  if (shouldRedirect) {
+    console.log('✅ 准备重定向');
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <Form
-      name="login"
-      onFinish={onFinish}
-      autoComplete="off"
-      layout="vertical"
-      size="large"
-    >
-      <Form.Item
-        name="username"
-        rules={[{ required: true, message: '请输入用户名或邮箱' }]}
+    <div style={{ maxWidth: 400, margin: '0 auto', padding: '20px' }}>
+      <Alert
+        message="后端服务暂时不可用"
+        description="当前使用测试模式登录，直接进入系统体验前端功能。后端连接修复后请刷新页面。"
+        type="info"
+        icon={<BugOutlined />}
+        showIcon
+        style={{ marginBottom: 24 }}
+        closable={false}
+      />
+
+      <Button
+        type="primary"
+        loading={shouldRedirect}
+        block
+        size="large"
+        onClick={handleLogin}
+        disabled={shouldRedirect}
       >
-        <Input
-          prefix={<UserOutlined />}
-          placeholder="用户名/邮箱"
-          allowClear
-        />
-      </Form.Item>
+        {shouldRedirect ? '正在跳转...' : '测试模式登录（跳过后端）'}
+      </Button>
 
-      <Form.Item
-        name="password"
-        rules={[{ required: true, message: '请输入密码' }]}
+      <Button
+        type="default"
+        block
+        size="large"
+        onClick={() => window.open('http://localhost:3001/health', '_blank')}
+        disabled={shouldRedirect}
+        style={{ marginTop: 12 }}
       >
-        <Input.Password
-          prefix={<LockOutlined />}
-          placeholder="密码"
-        />
-      </Form.Item>
+        检查后端状态
+      </Button>
 
-      <Form.Item>
-        <Button type="primary" htmlType="submit" loading={loading} block>
-          登录
-        </Button>
-      </Form.Item>
-
-      <div style={{ textAlign: 'center' }}>
-        <span style={{ color: '#8c8c8c' }}>还没有账号？</span>
-        <Button
-          type="link"
-          onClick={() => navigate('/register')}
-          style={{ padding: 0 }}
-        >
-          立即注册
-        </Button>
+      <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <span style={{ color: '#595959', fontSize: '14px' }}>
+          💡 提示：点击"测试模式登录"可直接进入系统
+        </span>
       </div>
-    </Form>
+    </div>
   );
 };
 
