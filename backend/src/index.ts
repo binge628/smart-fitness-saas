@@ -45,6 +45,7 @@ app.get('/health', async (req, res) => {
 });
 
 // API 路由前缀和基础路由
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 // app.use('/api/gyms', require('./routes/gymRoutes'));
 // app.use('/api/plans', require('./routes/planRoutes'));
