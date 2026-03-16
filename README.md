@@ -50,9 +50,20 @@ npm run dev
 
 ### 后端启动
 
-**1. 配置数据库**
+**方式 A：Supabase 云数据库（推荐，跨系统通用）**
 
-首次运行需要先配置 PostgreSQL 数据库：
+```bash
+cd backend
+# 1. 注册 Supabase 并获取连接字符串：https://supabase.com
+# 2. 修改 .env 中的 DATABASE_URL
+# 3. 在 Supabase SQL Editor 运行 db/init.sql
+# 4. 启动服务
+npm run dev
+```
+
+详细说明：[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)
+
+**方式 B：本地 PostgreSQL**
 
 ```bash
 # macOS 安装 PostgreSQL
@@ -61,17 +72,9 @@ brew services start postgresql@16
 
 # 初始化数据库
 cd backend
-cp .env.example .env  # 或使用已创建的 .env
 ./scripts/init-db.sh
 
-# 或手动初始化（参考 docs/DATABASE_SETUP.md）
-```
-
-**2. 启动后端服务**
-
-```bash
-cd backend
-npm install
+# 启动服务
 npm run dev
 ```
 
