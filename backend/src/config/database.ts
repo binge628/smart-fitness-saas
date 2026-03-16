@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// 先加载环境变量
+dotenv.config();
+
 import { Pool } from 'pg';
 
 /**
@@ -15,10 +20,10 @@ let poolConfig: any = {
   connectionTimeoutMillis: 2000, // 连接超时时间
 };
 
-// 优先使用连接字符串（用于 Supabase 等云数据库）
 if (connectionString) {
+  // 优先使用连接字符串
   poolConfig.connectionString = connectionString;
-  console.log('🔗 使用连接字符串配置数据库');
+  console.log('🔗 使用 Supabase 连接字符串配置数据库');
 } else {
   // 使用分离的配置项（用于本地 PostgreSQL）
   poolConfig.host = process.env.DB_HOST || 'localhost';
@@ -28,6 +33,12 @@ if (connectionString) {
   poolConfig.password = process.env.DB_PASSWORD || '';
   console.log('🔗 使用本地配置连接数据库');
 }
+
+console.log('数据库配置检查:', {
+  hasConnectionString: !!connectionString,
+  connectionString: connectionString ? connectionString.substring(0, 30) + '...' : 'none',
+  hasDbHost: !!process.env.DB_HOST,
+});
 
 // 创建数据库连接池
 const pool = new Pool(poolConfig);
