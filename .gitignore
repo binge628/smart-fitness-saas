@@ -1,0 +1,47 @@
+# 依赖
+node_modules/
+.pnp
+.pnp.js
+
+# 构建产物
+build/
+dist/
+*.tsbuildinfo
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+logs/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 测试覆盖率
+coverage/
+
+# 临时文件
+tmp/
+temp/
+.cache/
+
+# Docker
+.docker/
+
+# 数据库
+*.db
+*.sqlite
