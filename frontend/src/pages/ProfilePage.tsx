@@ -12,7 +12,6 @@ import {
   Avatar,
   Modal,
   Space,
-  Input as TextArea,
 } from 'antd';
 import {
   UserOutlined,
@@ -105,6 +104,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
+    // 1MB 限制用于避免 base64 过大
     const maxSize = 1024 * 1024;
     if (file.size > maxSize) {
       message.error('图片大小不能超过 1MB');
@@ -119,6 +119,7 @@ const ProfilePage: React.FC = () => {
     };
     reader.readAsDataURL(file);
 
+    // 清空 input，只在新文件选择时触发
     if (e.target) {
       e.target.value = '';
     }
@@ -188,65 +189,38 @@ const ProfilePage: React.FC = () => {
       />
 
       <Title level={2} style={{ marginBottom: 24 }}>
-        个人资料
+        欢迎回来，开始今天的健身！
       </Title>
 
       <Row gutter={[24, 24]}>
         <Col xs={24} md={6}>
           <Card style={{ textAlign: 'center' }}>
-            <div
-              style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}
-              onClick={handleAvatarClick}
-              onMouseEnter={() => setIsAvatarHover(true)}
-              onMouseLeave={() => setIsAvatarHover(false)}
-            >
-              <Avatar
-                size={120}
-                src={user.avatar}
-                icon={<UserOutlined />}
-                style={{ cursor: 'pointer', border: '3px solid #f0f0f0' }}
-              />
-              {isAvatarHover && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '120px',
-                    height: '120px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    border: '3px solid #f0f0f0',
-                  }}
-                >
-                  <CameraOutlined style={{ color: 'white', fontSize: '28px' }} />
-                </div>
-              )}
-            </div>
-            <Title level={4} style={{ fontSize: '20px', marginBottom: 8 }}>
+            <Avatar
+              size={120}
+              src={user.avatar}
+              icon={<UserOutlined />}
+              style={{ marginBottom: 16 }}
+            />
+            <Title level={4} style={{ marginBottom: 8 }}>
               {user.username}
             </Title>
-            <Text type="secondary">账号信息</Text>
+            <Text type="secondary">{user.email}</Text>
             <Divider />
             <div style={{ textAlign: 'left' }}>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: '14px' }}>邮箱：{user.email}</Text>
+                <Text type="secondary">角色：{getRoleText(user.role)}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: '14px' }}>角色：{getRoleText(user.role)}</Text>
-              </div>
-              <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: '14px' }}>状态：</Text>
+                <Text type="secondary">账号状态：</Text>
                 <Text style={{ color: getStatusColor(user.status), fontWeight: 500, marginLeft: 8 }}>
                   {getStatusText(user.status)}
                 </Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ fontSize: '14px' }}>注册时间：{new Date(user.created_at).toLocaleDateString()}</Text>
+                <Text type="secondary">注册时间：</Text>
+                <Text style={{ marginLeft: 8 }}>
+                  {new Date(user.created_at).toLocaleDateString()}
+                </Text>
               </div>
             </div>
             <Space orientation="vertical" style={{ width: '100%', marginTop: 16 }}>
@@ -269,10 +243,7 @@ const ProfilePage: React.FC = () => {
         </Col>
 
         <Col xs={24} md={18}>
-          <Card
-            title="基本信息"
-            style={{ marginBottom: 24 }}
-          >
+          <Card title="基本信息" style={{ marginBottom: 24 }}>
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12}>
                 <div style={{ marginBottom: 16 }}>
@@ -294,7 +265,7 @@ const ProfilePage: React.FC = () => {
                 <div style={{ marginBottom: 16 }}>
                   <Text type="secondary" style={{ fontSize: '14px' }}>手机号</Text>
                   <div style={{ fontSize: '18px', fontWeight: 500, marginTop: 4 }}>
-                    {user.phone || '-'}
+                    {user.phone || ''}
                   </div>
                 </div>
               </Col>
@@ -309,7 +280,7 @@ const ProfilePage: React.FC = () => {
             </Row>
           </Card>
 
-          <Card title="安全设置">
+          <Card title="安全设置" style={{ marginBottom: 24 }}>
             <div style={{ padding: '12px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
@@ -367,54 +338,6 @@ const ProfilePage: React.FC = () => {
       </Modal>
 
       <Modal
-        title="修改资料"
-        open={profileModalVisible}
-        onOk={handleUpdateProfile}
-        onCancel={() => setProfileModalVisible(false)}
-        confirmLoading={loading}
-        destroyOnHidden
-        width={500}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="用户名"
-            name="username"
-            rules={[
-              { required: true, message: '请输入用户名' },
-              { min: 3, message: '用户名至少3个字符' },
-              { max: 20, message: '用户名最多20个字符' },
-            ]}
-          >
-            <Input prefix={<UserOutlined />} placeholder="请输入用户名" />
-          </Form.Item>
-
-          {/* 头像输入框 - 用于测试 */}
-          <Form.Item label="头像（测试用，输入 base64）">
-            <Input.TextArea
-              rows={3}
-              placeholder="粘贴 base64 图片数据（data:image/png;base64,...）"
-              onChange={(e) => setPreviewAvatar(e.target.value)}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="邮箱"
-            name="email"
-            rules={[
-              { required: true, message: '请输入邮箱' },
-              { type: 'email', message: '邮箱格式不正确' },
-            ]}
-          >
-            <Input prefix={<MailOutlined />} placeholder="请输入邮箱" />
-          </Form.Item>
-
-          <Form.Item label="手机号" name="phone">
-            <Input prefix={<PhoneOutlined />} placeholder="请输入手机号" />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
         title="修改密码"
         open={passwordModalVisible}
         onOk={handleChangePassword}
@@ -459,13 +382,12 @@ const ProfilePage: React.FC = () => {
             <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
           </Form.Item>
         </Form>
+      </Modal>
 
       <Modal
         title="确认更换头像"
         open={avatarModalVisible}
         onOk={handleConfirmAvatar}
-        okText="确定"
-        cancelText="取消"
         onCancel={() => {
           setAvatarModalVisible(false);
           setPreviewAvatar('');
