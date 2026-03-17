@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Card,
   Form,
@@ -11,12 +11,15 @@ import {
   Divider,
   Avatar,
   Modal,
+  Upload,
+  Space,
 } from 'antd';
 import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
   LockOutlined,
+  CameraOutlined,
 } from '@ant-design/icons';
 import { authService } from '../services/api';
 import type { User } from '../types';
@@ -24,34 +27,37 @@ import type { User } from '../types';
 const { Title, Text } = Typography;
 
 const ProfilePage: React.FC = () => {
+  const form = Form.useForm();
+  const passwordForm = Form.useForm();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
-  const [profileForm] = Form.useForm();
-  const [passwordForm] = Form.useForm();
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState<string>('');
+  const [isAvatar hover, setIsAvatarHover] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const res = await authService.getMe();
+        setUser(res.data);
+        form.setFieldsValue({
+          username: res.data.username,
+          email: res.data.email,
+          phone: res.data.phone,
+        });
+      } catch (error) {
+        message.error('加载用户信息失败');
+      }
+    };
     loadUserProfile();
   }, []);
 
-  const loadUserProfile = async () => {
-    try {
-      const res = await authService.getMe();
-      setUser(res.data);
-      profileForm.setFieldsValue({
-        username: res.data.username,
-        email: res.data.email,
-        phone: res.data.phone,
-      });
-    } catch (error) {
-      message.error('加载用户信息失败');
-    }
-  };
-
   const handleUpdateProfile = async () => {
     try {
-      const values = await profileForm.validateFields();
+      const values = await form.validateFields();
       setLoading(true);
       const res = await authService.updateMe(values);
       setUser(res.data);
@@ -80,6 +86,59 @@ const ProfilePage: React.FC = () => {
       window.location.href = '/login';
     } catch (error: any) {
       message.error(error?.error || '修改密码失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件类型
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      message.error('只支持上传 JPG, PNG, GIF, WebP 格式的图片');
+      return;
+    }
+
+    // 检查文件大小 (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      message.error('图片大小不能超过 2MB');
+      return;
+    }
+
+    // 读取文件并转换为 base64
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      setPreviewAvatar(base64);
+      setAvatarModalVisible(true);
+    };
+    reader.readAsDataURL(file);
+
+    // 清空 input，允许重复选择同一文件
+    e.target.value = '';
+  };
+
+  const handleConfirmAvatar = async () => {
+    try {
+      setLoading(true);
+      const res = await authService.updateMe({ avatar: previewAvatar });
+      setUser(res.data);
+      message.success('头像更新成功');
+      setAvatarModalVisible(false);
+      setPreviewAvatar('');
+      // 更新本地存储的用户信息
+      localStorage.setItem('user', JSON.stringify(res.data));
+    } catch (error: any) {
+      message.error(error?.error || '更新头像失败');
     } finally {
       setLoading(false);
     }
@@ -120,19 +179,54 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       <Title level={2} style={{ marginBottom: 24 }}>
         👤 个人资料
       </Title>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} md={8} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={6} style={{ marginBottom: 24 }}>
           <Card style={{ textAlign: 'center' }}>
-            <Avatar
-              size={120}
-              src={user.avatar}
-              icon={<UserOutlined />}
-              style={{ marginBottom: 16 }}
-            />
+            <div
+              style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}
+              onClick={handleAvatarClick}
+              onMouseEnter={() => setIsAvatarHover(true)}
+              onMouseLeave={() => setIsAvatarHover(false)}
+            >
+              <Avatar
+                size={120}
+                src={user.avatar}
+                icon={<UserOutlined />}
+                style={{ cursor: 'pointer', border: '3px solid #f0f0f0' }}
+              />
+              {isAvatarHover && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    border: '3px solid #f0f0f0',
+                  }}
+                >
+                  <CameraOutlined style={{ color: 'white', fontSize: '24px' }} />
+                </div>
+              )}
+            </div>
             <Title level={4} style={{ marginBottom: 8 }}>
               {user.username}
             </Title>
@@ -155,17 +249,26 @@ const ProfilePage: React.FC = () => {
                 </Text>
               </div>
             </div>
-            <Button
-              type="primary"
-              style={{ width: '100%', marginTop: 16 }}
-              onClick={() => setProfileModalVisible(true)}
-            >
-              编辑资料
-            </Button>
+            <Space direction="vertical" style={{ width: '100%', marginTop: 16 }}>
+              <Button
+                type="primary"
+                style={{ width: '100%' }}
+                onClick={() => setProfileModalVisible(true)}
+              >
+                编辑资料
+              </Button>
+              <Button
+                icon={<CameraOutlined />}
+                style={{ width: '100%' }}
+                onClick={handleAvatarClick}
+              >
+                更换头像
+              </Button>
+            </Space>
           </Card>
         </Col>
 
-        <Col xs={24} md={16}>
+        <Col xs={24} md={18}>
           <Card
             title={`用户资料：${user.email}`}
             style={{ marginBottom: 24 }}
@@ -236,7 +339,7 @@ const ProfilePage: React.FC = () => {
         confirmLoading={loading}
         destroyOnHidden
       >
-        <Form form={profileForm} layout="vertical">
+        <Form form={form} layout="vertical">
           <Form.Item
             label="用户名"
             name="username"
@@ -260,9 +363,6 @@ const ProfilePage: React.FC = () => {
           </Form.Item>
           <Form.Item label="手机号" name="phone">
             <Input prefix={<PhoneOutlined />} placeholder="请输入手机号" />
-          </Form.Item>
-          <Form.Item label="头像 URL" name="avatar">
-            <Input placeholder="请输入头像 URL" />
           </Form.Item>
         </Form>
       </Modal>
@@ -313,6 +413,27 @@ const ProfilePage: React.FC = () => {
             <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 头像预览确认弹窗 */}
+      <Modal
+        title="确认更换头像"
+        open={avatarModalVisible}
+        onOk={handleConfirmAvatar}
+        onCancel={() => {
+          setAvatarModalVisible(false);
+          setPreviewAvatar('');
+        }}
+        confirmLoading={loading}
+        destroyOnHidden
+        width={400}
+      >
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <Avatar size={150} src={previewAvatar} icon={<UserOutlined />} />
+          <div style={{ marginTop: 16 }}>
+            <Text type="secondary">点击"确定"按钮保存新头像</Text>
+          </div>
+        </div>
       </Modal>
     </div>
   );
