@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, message, Alert } from 'antd';
+import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Navigate } from 'react-router-dom';
 
@@ -45,21 +45,6 @@ const LoginPage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', padding: '20px' }}>
-      <Alert
-        title="💡 提示"
-        description={
-          <div>
-            <p>测试账号信息：</p>
-            <p style={{ color: '#00B8D9', fontWeight: 'bold', marginBottom: 0, marginTop: '8px' }}>
-              用户名：admin / 密码：admin123
-            </p>
-          </div>
-        }
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
-      />
-
       <div
         style={{
           background: '#fff',
