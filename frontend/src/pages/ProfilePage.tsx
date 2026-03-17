@@ -12,6 +12,7 @@ import {
   Avatar,
   Modal,
   Space,
+  Input as TextArea,
 } from 'antd';
 import {
   UserOutlined,
@@ -366,6 +367,54 @@ const ProfilePage: React.FC = () => {
       </Modal>
 
       <Modal
+        title="修改资料"
+        open={profileModalVisible}
+        onOk={handleUpdateProfile}
+        onCancel={() => setProfileModalVisible(false)}
+        confirmLoading={loading}
+        destroyOnHidden
+        width={500}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="用户名"
+            name="username"
+            rules={[
+              { required: true, message: '请输入用户名' },
+              { min: 3, message: '用户名至少3个字符' },
+              { max: 20, message: '用户名最多20个字符' },
+            ]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="请输入用户名" />
+          </Form.Item>
+
+          {/* 头像输入框 - 用于测试 */}
+          <Form.Item label="头像（测试用，输入 base64）">
+            <Input.TextArea
+              rows={3}
+              placeholder="粘贴 base64 图片数据（data:image/png;base64,...）"
+              onChange={(e) => setPreviewAvatar(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="邮箱"
+            name="email"
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '邮箱格式不正确' },
+            ]}
+          >
+            <Input prefix={<MailOutlined />} placeholder="请输入邮箱" />
+          </Form.Item>
+
+          <Form.Item label="手机号" name="phone">
+            <Input prefix={<PhoneOutlined />} placeholder="请输入手机号" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
         title="修改密码"
         open={passwordModalVisible}
         onOk={handleChangePassword}
@@ -410,7 +459,6 @@ const ProfilePage: React.FC = () => {
             <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
           </Form.Item>
         </Form>
-      </Modal>
 
       <Modal
         title="确认更换头像"
