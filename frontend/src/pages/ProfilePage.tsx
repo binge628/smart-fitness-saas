@@ -108,9 +108,9 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    // 检查文件大小 (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      message.error('图片大小不能超过 2MB');
+    // 检查文件大小 (1MB，避免 base64 过大)
+    if (file.size > 1 * 1024 * 1024) {
+      message.error('图片大小不能超过 1MB');
       return;
     }
 
@@ -420,6 +420,8 @@ const ProfilePage: React.FC = () => {
         title="确认更换头像"
         open={avatarModalVisible}
         onOk={handleConfirmAvatar}
+        okText="确定"
+        cancelText="取消"
         onCancel={() => {
           setAvatarModalVisible(false);
           setPreviewAvatar('');
