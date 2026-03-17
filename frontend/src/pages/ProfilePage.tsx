@@ -26,14 +26,14 @@ import type { User } from '../types';
 const { Title, Text } = Typography;
 
 const ProfilePage: React.FC = () => {
-  const formInstance = Form.useForm();
-  const passwordFormInstance = Form.useForm();
+  const form = Form.useForm();
+  const passwordForm = Form.useForm();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
-  const [previewAvatar, setPreviewAvatar] = useState<string>('');
+  const [previewAvatar, setPreviewAvatar] = useState('');
   const [isAvatarHover, setIsAvatarHover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,7 +42,7 @@ const ProfilePage: React.FC = () => {
       try {
         const res = await authService.getMe();
         setUser(res.data);
-        formInstance.setFieldsValue({
+        form.setFieldsValue({
           username: res.data.username,
           email: res.data.email,
           phone: res.data.phone,
@@ -56,7 +56,7 @@ const ProfilePage: React.FC = () => {
 
   const handleUpdateProfile = async () => {
     try {
-      const values = await formInstance.validateFields();
+      const values = await form.validateFields();
       setLoading(true);
       const res = await authService.updateMe(values);
       setUser(res.data);
@@ -72,11 +72,11 @@ const ProfilePage: React.FC = () => {
 
   const handleChangePassword = async () => {
     try {
-      const values = await passwordFormInstance.validateFields();
+      const values = await passwordForm.validateFields();
       setLoading(true);
       await authService.changePassword(values);
       message.success('密码修改成功，请重新登录');
-      passwordFormInstance.resetFields();
+      passwordForm.resetFields();
       setPasswordModalVisible(false);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -96,9 +96,7 @@ const ProfilePage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
@@ -142,22 +140,22 @@ const ProfilePage: React.FC = () => {
   };
 
   const getRoleText = (role: string) => {
-    const roleMap: Record<string, string> = {
+    const map: Record<string, string> = {
       admin: '管理员',
       coach: '教练',
       gym_admin: '健身房管理员',
       user: '普通用户',
     };
-    return roleMap[role] || '未知';
+    return map[role] || '未知';
   };
 
   const getStatusText = (status: string) => {
-    const statusMap: Record<string, string> = {
+    const map: Record<string, string> = {
       active: '正常',
       inactive: '未激活',
       banned: '已禁用',
     };
-    return statusMap[status] || '未知';
+    return map[status] || '未知';
   };
 
   const getStatusColor = (status: string) => {
@@ -178,63 +176,25 @@ const ProfilePage: React.FC = () => {
     );
   }
 
-  const usernameRules = [
-    { required: true, message: '请输入用户名' },
-    { min: 3, message: '用户名至少3个字符' },
-    { max: 20, message: '用户名最多20个字符' },
-  ];
-
-  const emailRules = [
-    { required: true, message: '请输入邮箱' },
-    { type: 'email', message: '邮箱格式不正确' },
-  ];
-
-  const currentPasswordRules = [
-    { required: true, message: '请输入当前密码' },
-  ];
-
-  const newPasswordRules = [
-    { required: true, message: '请输入新密码' },
-    { min: 6, message: '新密码至少6个字符' },
-  ];
-
-  const confirmPasswordRules = [
-    { required: true, message: '请确认新密码' },
-    ({ getFieldValue }: any) => ({
-      validator(_: any, value: any) {
-        if (!value || getFieldValue('newPassword') === value) {
-          return Promise.resolve();
-        }
-        return Promise.reject(new Error('两次输入的密码不一致'));
-      },
-    }),
-  ];
-
   return (
     <div>
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        accept="image/*"
         style={{ display: 'none' }}
         onChange={handleFileChange}
       />
 
       <Title level={2} style={{ marginBottom: 24 }}>
-        欢迎回来，开始今天的健身！
+        个人资料
       </Title>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} md={6} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={6}>
           <Card style={{ textAlign: 'center' }}>
             <div
-              style={{
-                position: 'relative',
-                display: 'inline-block',
-                marginBottom: 16,
-                width: 'fit-content',
-                margin: '0 auto'
-              }}
+              style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}
               onClick={handleAvatarClick}
               onMouseEnter={() => setIsAvatarHover(true)}
               onMouseLeave={() => setIsAvatarHover(false)}
@@ -266,26 +226,26 @@ const ProfilePage: React.FC = () => {
                 </div>
               )}
             </div>
-            <Title level={4} style={{ marginBottom: 8 }}>
+            <Title level={4} style={{ fontSize: '20px', marginBottom: 8 }}>
               {user.username}
             </Title>
-            <Text type="secondary">{user.email}</Text>
-            <Divider style={{ my: 16 }} />
+            <Text type="secondary">账号信息</Text>
+            <Divider />
             <div style={{ textAlign: 'left' }}>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ marginRight: 8 }}>角色：{getRoleText(user.role)}</Text>
+                <Text type="secondary" style={{ fontSize: '14px' }}>邮箱：{user.email}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary">账号状态：</Text>
+                <Text type="secondary" style={{ fontSize: '14px' }}>角色：{getRoleText(user.role)}</Text>
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <Text type="secondary" style={{ fontSize: '14px' }}>状态：</Text>
                 <Text style={{ color: getStatusColor(user.status), fontWeight: 500, marginLeft: 8 }}>
                   {getStatusText(user.status)}
                 </Text>
               </div>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary">注册时间：</Text>
-                <Text style={{ marginLeft: 8 }}>
-                  {new Date(user.created_at).toLocaleDateString('zh-CN')}
-                </Text>
+                <Text type="secondary" style={{ fontSize: '14px' }}>注册时间：{new Date(user.created_at).toLocaleDateString()}</Text>
               </div>
             </div>
             <Space orientation="vertical" style={{ width: '100%', marginTop: 16 }}>
@@ -309,38 +269,38 @@ const ProfilePage: React.FC = () => {
 
         <Col xs={24} md={18}>
           <Card
-            title={`用户资料：${user.email}`}
+            title="基本信息"
             style={{ marginBottom: 24 }}
           >
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12}>
                 <div style={{ marginBottom: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>用户名</Text>
-                  <div style={{ fontSize: '16px', fontWeight: 500, marginTop: 4 }}>
+                  <Text type="secondary" style={{ fontSize: '14px' }}>用户名</Text>
+                  <div style={{ fontSize: '18px', fontWeight: 500, marginTop: 4 }}>
                     {user.username}
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={12}>
                 <div style={{ marginBottom: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>邮箱</Text>
-                  <div style={{ fontSize: '16px', fontWeight: 500, marginTop: 4 }}>
+                  <Text type="secondary" style={{ fontSize: '14px' }}>邮箱</Text>
+                  <div style={{ fontSize: '18px', fontWeight: 500, marginTop: 4 }}>
                     {user.email}
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={12}>
                 <div style={{ marginBottom: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>手机号</Text>
-                  <div style={{ fontSize: '16px', fontWeight: 500, marginTop: 4 }}>
-                    {user.phone || ''}
+                  <Text type="secondary" style={{ fontSize: '14px' }}>手机号</Text>
+                  <div style={{ fontSize: '18px', fontWeight: 500, marginTop: 4 }}>
+                    {user.phone || '-'}
                   </div>
                 </div>
               </Col>
               <Col xs={24} sm={12}>
                 <div style={{ marginBottom: 16 }}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>角色</Text>
-                  <div style={{ fontSize: '16px', fontWeight: 500, marginTop: 4 }}>
+                  <Text type="secondary" style={{ fontSize: '14px' }}>角色</Text>
+                  <div style={{ fontSize: '18px', fontWeight: 500, marginTop: 4 }}>
                     {getRoleText(user.role)}
                   </div>
                 </div>
@@ -348,12 +308,12 @@ const ProfilePage: React.FC = () => {
             </Row>
           </Card>
 
-          <Card title="安全设置" style={{ marginBottom: 24 }}>
+          <Card title="安全设置">
             <div style={{ padding: '12px 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
                   <div style={{ fontSize: '16px', fontWeight: 500 }}>登录密码</div>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                  <Text type="secondary" style={{ fontSize: '14px' }}>
                     定期修改密码可以保护账户安全
                   </Text>
                 </div>
@@ -370,25 +330,32 @@ const ProfilePage: React.FC = () => {
       </Row>
 
       <Modal
-        title="编辑个人资料"
+        title="编辑资料"
         open={profileModalVisible}
         onOk={handleUpdateProfile}
         onCancel={() => setProfileModalVisible(false)}
         confirmLoading={loading}
         destroyOnHidden
       >
-        <Form form={formInstance} layout="vertical">
+        <Form form={form} layout="vertical">
           <Form.Item
             label="用户名"
             name="username"
-            rules={usernameRules}
+            rules={[
+              { required: true, message: '请输入用户名' },
+              { min: 3, message: '用户名至少3个字符' },
+              { max: 20, message: '用户名最多20个字符' },
+            ]}
           >
             <Input prefix={<UserOutlined />} placeholder="请输入用户名" />
           </Form.Item>
           <Form.Item
             label="邮箱"
             name="email"
-            rules={emailRules}
+            rules={[
+              { required: true, message: '请输入邮箱' },
+              { type: 'email', message: '邮箱格式不正确' },
+            ]}
           >
             <Input prefix={<MailOutlined />} placeholder="请输入邮箱" />
           </Form.Item>
@@ -406,18 +373,21 @@ const ProfilePage: React.FC = () => {
         confirmLoading={loading}
         destroyOnHidden
       >
-        <Form form={passwordFormInstance} layout="vertical">
+        <Form form={passwordForm} layout="vertical">
           <Form.Item
             label="当前密码"
             name="oldPassword"
-            rules={currentPasswordRules}
+            rules={[{ required: true, message: '请输入当前密码' }]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="请输入当前密码" />
           </Form.Item>
           <Form.Item
             label="新密码"
             name="newPassword"
-            rules={newPasswordRules}
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '新密码至少6个字符' },
+            ]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="请输入新密码" />
           </Form.Item>
@@ -425,7 +395,17 @@ const ProfilePage: React.FC = () => {
             label="确认新密码"
             name="confirmPassword"
             dependencies={['newPassword']}
-            rules={confirmPasswordRules}
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="请再次输入新密码" />
           </Form.Item>
