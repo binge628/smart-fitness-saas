@@ -249,7 +249,7 @@ const ProfilePage: React.FC = () => {
                 </Text>
               </div>
             </div>
-            <Space direction="vertical" style={{ width: '100%', marginTop: 16 }}>
+            <Space orientation="vertical" style={{ width: '100%', marginTop: 16 }}>
               <Button
                 type="primary"
                 style={{ width: '100%' }}
