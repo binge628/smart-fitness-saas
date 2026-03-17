@@ -82,6 +82,8 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
 
+    console.log('📥 收到登录请求:', { username });
+
     // 参数验证
     if (!username || !password) {
       return res.status(400).json({
@@ -104,6 +106,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     const user = result.rows[0];
+    console.log('📦 找到用户:', { id: user.id, username: user.username });
 
     // 检查用户状态
     if (user.status !== 'active') {

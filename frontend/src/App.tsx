@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 
 // 布局组件
@@ -41,25 +41,27 @@ const customTheme = {
 function App() {
   return (
     <ConfigProvider theme={customTheme} locale={zhCN}>
-      <BrowserRouter>
-        <Routes>
-          {/* 认证相关路由 - 嵌套路由 */}
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Route>
+      <AntApp>
+        <BrowserRouter>
+          <Routes>
+            {/* 认证相关路由 - 嵌套路由 */}
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Route>
 
-          {/* 主应用路由 */}
-          <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
-          <Route path="/plans" element={<AppLayout><PlansPage /></AppLayout>} />
-          <Route path="/gyms" element={<AppLayout><GymsPage /></AppLayout>} />
-          <Route path="/health" element={<AppLayout><HealthDataPage /></AppLayout>} />
-          <Route path="/workouts" element={<AppLayout><WorkoutsPage /></AppLayout>} />
+            {/* 主应用路由 */}
+            <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
+            <Route path="/plans" element={<AppLayout><PlansPage /></AppLayout>} />
+            <Route path="/gyms" element={<AppLayout><GymsPage /></AppLayout>} />
+            <Route path="/health" element={<AppLayout><HealthDataPage /></AppLayout>} />
+            <Route path="/workouts" element={<AppLayout><WorkoutsPage /></AppLayout>} />
 
-          {/* 默认重定向 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* 默认重定向 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AntApp>
     </ConfigProvider>
   );
 }

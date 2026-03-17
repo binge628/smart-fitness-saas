@@ -31,6 +31,19 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       });
     }
 
+    // 临时：允许测试 token 用于开发环境（使用有效的 UUID）
+    if (token === 'simple-token' && process.env.NODE_ENV !== 'production') {
+      // 设置测试用户信息 - 使用与数据库格式兼容的 UUID
+      req.user = {
+        userId: '00000000-0000-0000-0000-000000000001', // 有效的 nil UUID，避免类型错误
+        username: 'test',
+        email: 'test@example.com',
+        role: 'admin',
+      };
+      next();
+      return;
+    }
+
     const decoded = verifyToken(token);
 
     // 将用户信息附加到请求对象

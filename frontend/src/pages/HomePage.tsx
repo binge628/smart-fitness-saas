@@ -83,14 +83,14 @@ const HomePage: React.FC = () => {
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card
               loading={loading}
-              bordered={false}
-              bodyStyle={{ padding: '24px' }}
+              variant="outlined"
+              styles={{ body: { padding: '24px' } }}
             >
               <Statistic
                 title={card.title}
                 value={card.value}
                 prefix={card.prefix}
-                valueStyle={{ color: card.color }}
+                styles={{ content: { color: card.color } }}
               />
             </Card>
           </Col>
@@ -99,7 +99,7 @@ const HomePage: React.FC = () => {
 
       <Card
         title="💪 今日提示"
-        bordered={false}
+        variant="outlined"
         style={{ marginTop: 24 }}
       >
         <p style={{ fontSize: '16px', lineHeight: '1.8', marginBottom: 0 }}>

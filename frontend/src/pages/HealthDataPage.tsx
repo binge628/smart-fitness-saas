@@ -13,6 +13,7 @@ import {
   Col,
   DatePicker,
   Statistic,
+  Tag,
 } from 'antd';
 import {
   PlusOutlined,
@@ -274,7 +275,7 @@ const HealthDataPage: React.FC = () => {
               value={healthData[0]?.weight || 0}
               suffix="kg"
               precision={1}
-              valueStyle={{ color: '#00B8D9' }}
+              styles={{ content: { color: '#00B8D9' } }}
             />
           </Card>
         </Col>
@@ -283,7 +284,7 @@ const HealthDataPage: React.FC = () => {
             <Statistic
               title="最新BMI"
               value={calculateBMI(healthData[0]?.weight, healthData[0]?.height)}
-              valueStyle={{ color: '#00C853' }}
+              styles={{ content: { color: '#00C853' } }}
             />
           </Card>
         </Col>
@@ -294,7 +295,7 @@ const HealthDataPage: React.FC = () => {
               value={stats.avg_body_fat || 0}
               suffix="%"
               precision={1}
-              valueStyle={{ color: '#FF9800' }}
+              styles={{ content: { color: '#FF9800' } }}
             />
           </Card>
         </Col>
@@ -303,13 +304,13 @@ const HealthDataPage: React.FC = () => {
             <Statistic
               title="记录次数"
               value={healthData.length}
-              valueStyle={{ color: '#E91E63' }}
+              styles={{ content: { color: '#E91E63' } }}
             />
           </Card>
         </Col>
       </Row>
 
-      <Card bordered={false}>
+      <Card variant="outlined">
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
           <Col>
             <Space>
@@ -350,7 +351,7 @@ const HealthDataPage: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
         width={700}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>

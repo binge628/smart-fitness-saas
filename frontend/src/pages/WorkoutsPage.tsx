@@ -34,6 +34,12 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+const DIFFICULTY_LABELS: Record<string, string> = {
+  beginner: '初级',
+  intermediate: '中级',
+  advanced: '高级',
+};
+
 const WorkoutsPage: React.FC = () => {
   const [workouts, setWorkouts] = useState<WorkoutLog[]>([]);
   const [plans, setPlans] = useState<FitnessPlan[]>([]);
@@ -264,7 +270,7 @@ const WorkoutsPage: React.FC = () => {
               title="总训练次数"
               value={stats.total_workouts || 0}
               prefix={<CalendarOutlined />}
-              valueStyle={{ color: '#00B8D9' }}
+              styles={{ content: { color: '#00B8D9' } }}
             />
           </Card>
         </Col>
@@ -275,7 +281,7 @@ const WorkoutsPage: React.FC = () => {
               value={stats.total_duration || 0}
               suffix="分钟"
               prefix={<AimOutlined />}
-              valueStyle={{ color: '#00C853' }}
+              styles={{ content: { color: '#00C853' } }}
             />
           </Card>
         </Col>
@@ -287,7 +293,7 @@ const WorkoutsPage: React.FC = () => {
               suffix="kcal"
               prefix={<FireOutlined />}
               precision={0}
-              valueStyle={{ color: '#E91E63' }}
+              styles={{ content: { color: '#E91E63' } }}
             />
           </Card>
         </Col>
@@ -298,13 +304,13 @@ const WorkoutsPage: React.FC = () => {
               value={stats.avg_duration || 0}
               suffix="分钟"
               precision={0}
-              valueStyle={{ color: '#FF9800' }}
+              styles={{ content: { color: '#FF9800' } }}
             />
           </Card>
         </Col>
       </Row>
 
-      <Card bordered={false}>
+      <Card variant="outlined">
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
           <Col>
             <Space>
@@ -345,7 +351,7 @@ const WorkoutsPage: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>

@@ -28,7 +28,6 @@ import { gymService } from '../services/api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { TabPane } = Tabs;
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'green',
@@ -339,33 +338,45 @@ const GymsPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Card bordered={false}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="我的健身房" key="gyms">
-            <Table
-              rowKey="id"
-              columns={gymColumns}
-              dataSource={gyms}
-              loading={loading}
-              pagination={{
-                showSizeChanger: true,
-                showTotal: (total) => `共 ${total} 条记录`,
-              }}
-            />
-          </TabPane>
-          <TabPane tab="我的会员资格" key="myMemberships">
-            <Table
-              rowKey="id"
-              columns={membershipColumns}
-              dataSource={myMemberships}
-              loading={loading}
-              pagination={{
-                showSizeChanger: true,
-                showTotal: (total) => `共 ${total} 条记录`,
-              }}
-            />
-          </TabPane>
-        </Tabs>
+      <Card variant="outlined">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'gyms',
+              label: '我的健身房',
+              children: (
+                <Table
+                  rowKey="id"
+                  columns={gymColumns}
+                  dataSource={gyms}
+                  loading={loading}
+                  pagination={{
+                    showSizeChanger: true,
+                    showTotal: (total) => `共 ${total} 条记录`,
+                  }}
+                />
+              ),
+            },
+            {
+              key: 'myMemberships',
+              label: '我的会员资格',
+              children: (
+                <Table
+                  rowKey="id"
+                  columns={membershipColumns}
+                  dataSource={myMemberships}
+                  loading={loading}
+                  pagination={{
+                    showSizeChanger: true,
+                    showTotal: (total) => `共 ${total} 条记录`,
+                  }}
+                />
+              ),
+            },
+          ]}
+        />
       </Card>
 
       {/* 创建/编辑弹窗 */}
@@ -375,7 +386,7 @@ const GymsPage: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -430,7 +441,7 @@ const GymsPage: React.FC = () => {
       >
         {viewingGym && (
           <>
-            <Descriptions column={2} bordered style={{ marginBottom: 16 }}>
+            <Descriptions column={2} bordered={false} style={{ marginBottom: 16 }}>
               <Descriptions.Item label="健身房名称" span={2}>
                 {viewingGym.name}
               </Descriptions.Item>

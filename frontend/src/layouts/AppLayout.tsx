@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Typography, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -21,18 +21,42 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    // 只执行一次初始化检查
+    if (hasInitializedRef.current) {
+      return;
     }
-  }, []);
+    hasInitializedRef.current = true;
+
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    console.log('🔐 初始化检查登录状态:', { hasToken: !!token, hasUser: !!userData });
+
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error('解析用户数据失败:', e);
+        localStorage.clear();
+        setIsAuthenticated(false);
+      }
+    } else {
+      console.log('❌ 用户未登录，保持未认证状态');
+      setIsAuthenticated(false);
+    }
+  }, []); // 空依赖数组，只执行一次
 
   // 退出登录
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.clear();
+    setIsAuthenticated(false);
+    setUser(null);
+    hasInitializedRef.current = false; // 重置初始化标记，使下次登录能重新检查
     message.success('已退出登录');
     navigate('/login');
   };
@@ -88,7 +112,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         collapsed={collapsed}
         onCollapse={setCollapsed}
         className="app-sider"
-        Breakpoint="md"
+        breakpoint="md"
       >
         <div className="app-logo">
           <span className="logo-icon">🏋</span>

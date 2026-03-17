@@ -218,7 +218,7 @@ const PlansPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Card bordered={false}>
+      <Card variant="outlined">
         <Table
           rowKey="id"
           columns={columns}
@@ -238,7 +238,7 @@ const PlansPage: React.FC = () => {
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
         width={600}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -299,7 +299,7 @@ const PlansPage: React.FC = () => {
         width={600}
       >
         {viewingPlan && (
-          <Descriptions column={1} bordered>
+          <Descriptions column={1} bordered={false}>
             <Descriptions.Item label="计划名称">
               {viewingPlan.name}
             </Descriptions.Item>

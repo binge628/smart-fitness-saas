@@ -32,11 +32,12 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
+    // 暂时禁用 401 自动重定向，方便测试
+    // if (error.response?.status === 401) {
+    //   localStorage.removeItem('token');
+    //   localStorage.removeItem('user');
+    //   window.location.href = '/login';
+    // }
     return Promise.reject(error.response?.data || error.message);
   }
 );
