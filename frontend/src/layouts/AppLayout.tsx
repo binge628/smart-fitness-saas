@@ -88,6 +88,11 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       icon: <CalendarOutlined />,
       label: '训练日志',
     },
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: '个人资料',
+    },
   ];
 
   // 用户菜单
@@ -96,6 +101,7 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       key: 'profile',
       icon: <UserOutlined />,
       label: '个人资料',
+      onClick: () => navigate('/profile'),
     },
     {
       key: 'logout',

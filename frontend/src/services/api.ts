@@ -54,6 +54,14 @@ export const authService = {
 
   // 获取当前用户
   getMe: () => apiClient.get<any, ApiResponse<User>>('/auth/me'),
+
+  // 更新当前用户信息
+  updateMe: (data: { username?: string; email?: string; phone?: string; avatar?: string }) =>
+    apiClient.put<any, ApiResponse<User>>('/auth/me', data),
+
+  // 修改密码
+  changePassword: (data: { oldPassword: string; newPassword: string }) =>
+    apiClient.put<any, ApiResponse<void>>('/auth/me/password', data),
 };
 
 // 用户服务
