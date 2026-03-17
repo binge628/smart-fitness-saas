@@ -78,9 +78,11 @@ export const getGymMembers = async (req: Request, res: Response) => {
       params.push(status);
     }
 
-    query += ` ORDER BY gm.created_at DESC LIMIT $2 OFFSET $3`;
+    // 使用正确的参数索引
+    const paramCount = params.length;
+    query += ` ORDER BY gm.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
 
-    const result = await pool.query(query, params);
+    const result = await pool.query(query, [...params, Number(limit), Number(offset)]);
 
     res.json({
       success: true,
