@@ -35,7 +35,7 @@ const ProfilePage: React.FC = () => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState<string>('');
-  const [isAvatar hover, setIsAvatarHover] = useState(false);
+  const [isAvatarHover, setIsAvatarHover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
