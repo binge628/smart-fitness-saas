@@ -11,7 +11,6 @@ import {
   Divider,
   Avatar,
   Modal,
-  Upload,
   Space,
 } from 'antd';
 import {
@@ -63,7 +62,6 @@ const ProfilePage: React.FC = () => {
       setUser(res.data);
       message.success('用户信息更新成功');
       setProfileModalVisible(false);
-      // 更新本地存储的用户信息
       localStorage.setItem('user', JSON.stringify(res.data));
     } catch (error: any) {
       message.error(error?.error || '更新用户信息失败');
@@ -80,7 +78,6 @@ const ProfilePage: React.FC = () => {
       message.success('密码修改成功，请重新登录');
       passwordForm.resetFields();
       setPasswordModalVisible(false);
-      // 清除本地存储，强制重新登录
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -101,20 +98,17 @@ const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 检查文件类型
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
       message.error('只支持上传 JPG, PNG, GIF, WebP 格式的图片');
       return;
     }
 
-    // 检查文件大小 (1MB，避免 base64 过大)
     if (file.size > 1 * 1024 * 1024) {
       message.error('图片大小不能超过 1MB');
       return;
     }
 
-    // 读取文件并转换为 base64
     const reader = new FileReader();
     reader.onload = async () => {
       const base64 = reader.result as string;
@@ -123,7 +117,6 @@ const ProfilePage: React.FC = () => {
     };
     reader.readAsDataURL(file);
 
-    // 清空 input，允许重复选择同一文件
     e.target.value = '';
   };
 
@@ -135,7 +128,6 @@ const ProfilePage: React.FC = () => {
       message.success('头像更新成功');
       setAvatarModalVisible(false);
       setPreviewAvatar('');
-      // 更新本地存储的用户信息
       localStorage.setItem('user', JSON.stringify(res.data));
     } catch (error: any) {
       message.error(error?.error || '更新头像失败');
@@ -195,7 +187,7 @@ const ProfilePage: React.FC = () => {
         <Col xs={24} md={6} style={{ marginBottom: 24 }}>
           <Card style={{ textAlign: 'center' }}>
             <div
-              style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}
+              style={{ position: 'relative', display: 'inline-block', marginBottom: 16, width: 'fit-content', margin: '0 auto' }}
               onClick={handleAvatarClick}
               onMouseEnter={() => setIsAvatarHover(true)}
               onMouseLeave={() => setIsAvatarHover(false)}
@@ -212,8 +204,8 @@ const ProfilePage: React.FC = () => {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    width: '100%',
-                    height: '100%',
+                    width: '120px',
+                    height: '120px',
                     borderRadius: '50%',
                     backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     display: 'flex',
@@ -223,7 +215,7 @@ const ProfilePage: React.FC = () => {
                     border: '3px solid #f0f0f0',
                   }}
                 >
-                  <CameraOutlined style={{ color: 'white', fontSize: '24px' }} />
+                  <CameraOutlined style={{ color: 'white', fontSize: '28px' }} />
                 </div>
               )}
             </div>
@@ -234,7 +226,7 @@ const ProfilePage: React.FC = () => {
             <Divider style={{ my: 16 }} />
             <div style={{ textAlign: 'left' }}>
               <div style={{ marginBottom: 12 }}>
-                <Text type="secondary" style={{ marginRight: 8 }}>角色：{getRoleText(user.role)}</Text>
+                <Text type="secondary">角色：{getRoleText(user.role)}</Text>
               </div>
               <div style={{ marginBottom: 12 }}>
                 <Text type="secondary">账号状态：</Text>
@@ -330,7 +322,6 @@ const ProfilePage: React.FC = () => {
         </Col>
       </Row>
 
-      {/* 编辑资料弹窗 */}
       <Modal
         title="编辑个人资料"
         open={profileModalVisible}
@@ -367,7 +358,6 @@ const ProfilePage: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 修改密码弹窗 */}
       <Modal
         title="修改密码"
         open={passwordModalVisible}
@@ -415,7 +405,6 @@ const ProfilePage: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 头像预览确认弹窗 */}
       <Modal
         title="确认更换头像"
         open={avatarModalVisible}
