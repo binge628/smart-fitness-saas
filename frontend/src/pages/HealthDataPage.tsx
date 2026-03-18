@@ -14,6 +14,7 @@ import {
   DatePicker,
   Statistic,
   Tag,
+  Descriptions,
 } from 'antd';
 import {
   PlusOutlined,
@@ -21,6 +22,8 @@ import {
   DeleteOutlined,
   RiseOutlined,
   FallOutlined,
+  EyeOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import type { HealthData } from '../types';
 import { healthService } from '../services/api';
@@ -34,7 +37,9 @@ const HealthDataPage: React.FC = () => {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
   const [editingData, setEditingData] = useState<HealthData | null>(null);
+  const [viewingData, setViewingData] = useState<HealthData | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [form] = Form.useForm();
 
@@ -105,6 +110,11 @@ const HealthDataPage: React.FC = () => {
       record_date: dayjs(record.record_date),
     });
     setModalVisible(true);
+  };
+
+  const handleView = (record: HealthData) => {
+    setViewingData(record);
+    setDetailVisible(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -237,13 +247,31 @@ const HealthDataPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_: any, record: HealthData) => (
-        <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+          >
+            查看
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
             编辑
           </Button>
-          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+          >
             删除
           </Button>
         </Space>
@@ -337,6 +365,7 @@ const HealthDataPage: React.FC = () => {
           columns={columns}
           dataSource={healthData}
           loading={loading}
+          scroll={{ x: 1500 }}
           pagination={{
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 条记录`,
@@ -413,6 +442,68 @@ const HealthDataPage: React.FC = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      {/* 详情弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined />
+            <span>健康数据详情</span>
+          </Space>
+        }
+        open={detailVisible}
+        onCancel={() => setDetailVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailVisible(false)}>
+            关闭
+          </Button>,
+        ]}
+        width={700}
+      >
+        {viewingData && (
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="记录日期" span={2}>
+              {new Date(viewingData.record_date).toLocaleDateString('zh-CN')}
+            </Descriptions.Item>
+            <Descriptions.Item label="体重">
+              {viewingData.weight ? `${viewingData.weight} kg` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="身高">
+              {viewingData.height ? `${viewingData.height} cm` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="BMI" span={2}>
+              {viewingData.weight && viewingData.height ? (
+                (() => {
+                  const bmi = calculateBMI(viewingData.weight, viewingData.height);
+                  const status = getBMIStatus(bmi);
+                  return (
+                    <Tag color={status.color}>
+                      {bmi} ({status.text})
+                    </Tag>
+                  );
+                })()
+              ) : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="体脂率">
+              {viewingData.body_fat_percentage ? `${viewingData.body_fat_percentage}%` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="肌肉量">
+              {viewingData.muscle_mass ? `${viewingData.muscle_mass} kg` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="静息心率">
+              {viewingData.heart_rate_resting ? `${viewingData.heart_rate_resting} bpm` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="血压">
+              {viewingData.blood_pressure_systolic && viewingData.blood_pressure_diastolic
+                ? `${viewingData.blood_pressure_systolic}/${viewingData.blood_pressure_diastolic} mmHg`
+                : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="记录时间" span={2}>
+              {new Date(viewingData.created_at).toLocaleString('zh-CN')}
+            </Descriptions.Item>
+          </Descriptions>
+        )}
       </Modal>
     </div>
   );

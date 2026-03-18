@@ -244,20 +244,31 @@ const WorkoutsPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 150,
       render: (_: any, record: WorkoutLog) => (
-        <Space>
+        <Space size="small">
           <Button
             type="link"
+            size="small"
             icon={<EyeOutlined />}
             onClick={() => handleView(record)}
           >
             查看
           </Button>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          >
             编辑
           </Button>
-          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>
+          <Button
+            type="link"
+            size="small"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+          >
             删除
           </Button>
         </Space>
@@ -355,6 +366,7 @@ const WorkoutsPage: React.FC = () => {
           columns={columns}
           dataSource={workouts}
           loading={loading}
+          scroll={{ x: 1400 }}
           pagination={{
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 条记录`,
