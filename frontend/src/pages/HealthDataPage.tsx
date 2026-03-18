@@ -28,6 +28,7 @@ import {
 import type { HealthData } from '../types';
 import { healthService } from '../services/api';
 import dayjs from 'dayjs';
+import HealthDataChart from '../components/HealthDataChart';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -335,6 +336,13 @@ const HealthDataPage: React.FC = () => {
               styles={{ content: { color: '#E91E63' } }}
             />
           </Card>
+        </Col>
+      </Row>
+
+      {/* 趋势图表 */}
+      <Row style={{ marginBottom: 24 }}>
+        <Col span={24}>
+          <HealthDataChart data={healthData} />
         </Col>
       </Row>
 

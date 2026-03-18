@@ -32,6 +32,7 @@ import {
 import type { WorkoutLog, FitnessPlan } from '../types';
 import { workoutService, planService } from '../services/api';
 import dayjs from 'dayjs';
+import WorkoutStatsChart from '../components/WorkoutStatsChart';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -338,6 +339,9 @@ const WorkoutsPage: React.FC = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* 统计图表 */}
+      <WorkoutStatsChart data={workouts} />
 
       <Card variant="outlined">
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
