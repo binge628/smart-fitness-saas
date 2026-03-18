@@ -71,11 +71,11 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
   const renderBarChart = () => {
     if (chartData.length === 0) return null;
 
-    const width = 800;
-    const height = 280;
+    const viewBoxWidth = 800;
+    const viewBoxHeight = 280;
     const padding = { top: 20, right: 20, bottom: 60, left: 50 };
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
+    const chartWidth = viewBoxWidth - padding.left - padding.right;
+    const chartHeight = viewBoxHeight - padding.top - padding.bottom;
 
     const getValue = (d: typeof chartData[0]): number => {
       switch (chartType) {
@@ -105,14 +105,18 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
     }));
 
     return (
-      <svg width={width} height={height} style={{ width: '100%', height: 'auto' }}>
+      <svg
+        viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: '100%', height: 'auto' }}
+      >
         {/* Y轴网格线 */}
         {yAxis.map((tick, i) => (
           <g key={i}>
             <line
               x1={padding.left}
               y1={tick.y}
-              x2={width - padding.right}
+              x2={viewBoxWidth - padding.right}
               y2={tick.y}
               stroke="#e8e8e8"
               strokeWidth={1}
@@ -134,7 +138,7 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
           <text
             key={i}
             x={label.x}
-            y={height - padding.bottom + 20}
+            y={viewBoxHeight - padding.bottom + 20}
             textAnchor="middle"
             fontSize="10"
             fill="#666"
@@ -179,9 +183,9 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
 
   // 渲染环形图（强度分布）
   const renderDoughnutChart = () => {
-    const width = 300;
-    const height = 300;
-    const radius = 100;
+    const width = 280;
+    const height = 280;
+    const radius = 70;
     const centerX = width / 2;
     const centerY = height / 2;
 
@@ -203,7 +207,7 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
       { label: '低强度', count: intensityCounts.low, color: '#00C853' },
       { label: '中等强度', count: intensityCounts.medium, color: '#FF9800' },
       { label: '高强度', count: intensityCounts.high, color: '#E91E63' },
-    ];
+    ].filter(s => s.count > 0);
 
     const getCoords = (percent: number) => {
       const angle = (percent * 360 - 90) * (Math.PI / 180);
@@ -216,18 +220,11 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
     let currentPercent = 0;
 
     return (
-      <svg width={width} height={height}>
-        <text
-          x={centerX}
-          y={centerY + radius + 60}
-          textAnchor="middle"
-          fontSize="14"
-          fill="#666"
-        >
-          训练强度分布
-        </text>
-
-        {/* 环形图 */}
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: '100%', height: 'auto' }}
+      >
         {segments.map((segment, i) => {
           const percent = segment.count / total;
           const start = currentPercent;
@@ -239,7 +236,7 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
           const largeArc = percent > 0.5 ? 1 : 0;
 
           return (
-            <g key={i}>
+            <g key={i} style={{ cursor: 'pointer' }}>
               <path
                 d={`
                   M ${centerX} ${centerY}
@@ -248,33 +245,39 @@ const WorkoutStatsChart: React.FC<WorkoutStatsChartProps> = ({ data }) => {
                   Z
                 `}
                 fill={segment.color}
-                opacity="0.8"
+                opacity="0.9"
               />
-              {/* 图例 */}
-              {segment.count > 0 && (
-                <foreignObject
-                  x={centerX + radius + 20}
-                  y={centerY - radius + i * 40}
-                  width={100}
-                  height={30}
+              {percent > 0.05 && (
+                <text
+                  x={centerX + (radius * 0.6) * Math.cos(((start + end) / 2 * 360 - 90) * (Math.PI / 180))}
+                  y={centerY + (radius * 0.6) * Math.sin(((start + end) / 2 * 360 - 90) * (Math.PI / 180))}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize="12"
+                  fill="#fff"
+                  fontWeight="bold"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '12' }}>
-                    <span
-                      style={{
-                        width: 12,
-                        height: 12,
-                        backgroundColor: segment.color,
-                        borderRadius: '2px',
-                        marginRight: 8,
-                      }}
-                    />
-                    <span>{segment.label}: {Math.round(percent * 100)}%</span>
-                  </div>
-                </foreignObject>
+                  {Math.round(percent * 100)}%
+                </text>
               )}
             </g>
           );
         })}
+
+        {/* 图例 */}
+        <g transform={`translate(40, ${height - 90})`}>
+          {segments.map((segment, i) => {
+            const percent = segment.count / total;
+            return (
+              <g key={i} transform={`translate(0, ${i * 30})`}>
+                <rect width="12" height="12" fill={segment.color} rx={2} />
+                <text x={18} y={10} fontSize="12" fill="#666">
+                  {segment.label} ({Math.round(percent * 100)}%)
+                </text>
+              </g>
+            );
+          })}
+        </g>
       </svg>
     );
   };
