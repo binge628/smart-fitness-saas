@@ -6,6 +6,9 @@ import zhCN from 'antd/locale/zh_CN';
 import AppLayout from './layouts/AppLayout';
 import AuthLayout from './layouts/AuthLayout';
 
+// 守卫组件
+import { AuthGuard, PublicAuthGuard } from './components/AuthGuard';
+
 // 页面组件
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -46,18 +49,18 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* 认证相关路由 - 嵌套路由 */}
-            <Route element={<AuthLayout />}>
+            <Route element={<PublicAuthGuard><AuthLayout /></PublicAuthGuard>}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Route>
 
-            {/* 主应用路由 */}
-            <Route path="/" element={<AppLayout><HomePage /></AppLayout>} />
-            <Route path="/plans" element={<AppLayout><PlansPage /></AppLayout>} />
-            <Route path="/gyms" element={<AppLayout><GymsPage /></AppLayout>} />
-            <Route path="/health" element={<AppLayout><HealthDataPage /></AppLayout>} />
-            <Route path="/workouts" element={<AppLayout><WorkoutsPage /></AppLayout>} />
-            <Route path="/profile" element={<AppLayout><ProfilePage /></AppLayout>} />
+            {/* 主应用路由 - 需要认证 */}
+            <Route path="/" element={<AuthGuard><AppLayout><HomePage /></AppLayout></AuthGuard>} />
+            <Route path="/plans" element={<AuthGuard><AppLayout><PlansPage /></AppLayout></AuthGuard>} />
+            <Route path="/gyms" element={<AuthGuard><AppLayout><GymsPage /></AppLayout></AuthGuard>} />
+            <Route path="/health" element={<AuthGuard><AppLayout><HealthDataPage /></AppLayout></AuthGuard>} />
+            <Route path="/workouts" element={<AuthGuard><AppLayout><WorkoutsPage /></AppLayout></AuthGuard>} />
+            <Route path="/profile" element={<AuthGuard><AppLayout><ProfilePage /></AppLayout></AuthGuard>} />
 
             {/* 默认重定向 */}
             <Route path="*" element={<Navigate to="/" replace />} />

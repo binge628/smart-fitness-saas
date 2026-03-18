@@ -442,3 +442,127 @@ export const changePassword = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * 更新用户角色（仅管理员）
+ * PUT /api/users/:id/role
+ */
+export const updateUserRole = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: '仅管理员可以修改用户角色',
+      });
+    }
+
+    const { id } = req.params;
+    const { role } = req.body;
+
+    // 验证角色
+    const validRoles = ['user', 'admin', 'coach', 'gym_admin'];
+    if (!role || !validRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: `无效的角色，可选值: ${validRoles.join(', ')}`,
+      });
+    }
+
+    // 检查用户是否存在
+    const userResult = await pool.query(
+      'SELECT id, username FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在',
+      });
+    }
+
+    // 更新角色
+    const result = await pool.query(
+      'UPDATE users SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, username, email, role, status',
+      [role, id]
+    );
+
+    res.json({
+      success: true,
+      message: '用户角色更新成功',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('更新用户角色失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '更新用户角色失败',
+    });
+  }
+};
+
+/**
+ * 更新用户状态（仅管理员）
+ * PUT /api/users/:id/status
+ */
+export const updateUserStatus = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: '仅管理员可以修改用户状态',
+      });
+    }
+
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // 验证状态
+    const validStatuses = ['active', 'inactive', 'banned'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `无效的状态，可选值: ${validStatuses.join(', ')}`,
+      });
+    }
+
+    // 检查用户是否存在
+    const userResult = await pool.query(
+      'SELECT id, username FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (userResult.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: '用户不存在',
+      });
+    }
+
+    // 防止管理员禁用自己
+    if (id === req.user.userId && status !== 'active') {
+      return res.status(400).json({
+        success: false,
+        error: '不能禁用管理员自己',
+      });
+    }
+
+    // 更新状态
+    const result = await pool.query(
+      'UPDATE users SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, username, email, role, status',
+      [status, id]
+    );
+
+    res.json({
+      success: true,
+      message: '用户状态更新成功',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('更新用户状态失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '更新用户状态失败',
+    });
+  }
+};

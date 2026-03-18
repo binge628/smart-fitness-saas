@@ -11,6 +11,7 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import type { User } from '../types';
+import * as Permission from '../utils/permission';
 import './AppLayout.css';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,7 +22,6 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const hasInitializedRef = useRef(false);
 
   // 加载用户信息的函数
@@ -31,12 +31,12 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       try {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
-        setIsAuthenticated(true);
       } catch (e) {
         console.error('解析用户数据失败:', e);
+        setUser(null);
       }
     } else {
-      setIsAuthenticated(false);
+      setUser(null);
     }
   };
 
@@ -85,15 +85,14 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // 退出登录
   const handleLogout = () => {
     localStorage.clear();
-    setIsAuthenticated(false);
     setUser(null);
     hasInitializedRef.current = false; // 重置初始化标记，使下次登录能重新检查
     message.success('已退出登录');
     navigate('/login');
   };
 
-  // 导航菜单
-  const menuItems = [
+  // 导航菜单 - 根据权限动态生成
+  const baseMenuItems = [
     {
       key: '/',
       icon: <HomeOutlined />,
@@ -104,27 +103,49 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       icon: <AimOutlined />,
       label: '健身计划',
     },
-    {
-      key: '/gyms',
-      icon: <EnvironmentOutlined />,
-      label: '健身房',
-    },
-    {
-      key: '/health',
-      icon: <HeartOutlined />,
-      label: '健康数据',
-    },
-    {
-      key: '/workouts',
-      icon: <CalendarOutlined />,
-      label: '训练日志',
-    },
-    {
-      key: '/profile',
-      icon: <UserOutlined />,
-      label: '个人资料',
-    },
   ];
+
+  // 健身房菜单（所有角色可见）
+  const gymMenuItem = {
+    key: '/gyms',
+    icon: <EnvironmentOutlined />,
+    label: '健身房',
+  };
+
+  // 健康数据菜单（仅普通用户和管理员可见）
+  const healthMenuItem = {
+    key: '/health',
+    icon: <HeartOutlined />,
+    label: '健康数据',
+  };
+
+  // 训练日志菜单（仅普通用户和管理员可见）
+  const workoutMenuItem = {
+    key: '/workouts',
+    icon: <CalendarOutlined />,
+    label: '训练日志',
+  };
+
+  // 个人资料菜单（所有角色可见）
+  const profileMenuItem = {
+    key: '/profile',
+    icon: <UserOutlined />,
+    label: '个人资料',
+  };
+
+  // 动态组装菜单
+  let menuItems = [...baseMenuItems];
+
+  // 健身房菜单 - 所有角色都能看
+  menuItems.push(gymMenuItem);
+
+  // 健康数据和训练日志 - 仅普通用户和管理员能看到
+  if (Permission.hasRole([Permission.ROLES.USER, Permission.ROLES.ADMIN])) {
+    menuItems.push(healthMenuItem, workoutMenuItem);
+  }
+
+  // 个人资料
+  menuItems.push(profileMenuItem);
 
   // 用户菜单
   const userMenuItems = [
