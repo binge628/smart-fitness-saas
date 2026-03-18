@@ -16,6 +16,7 @@ import {
   Statistic,
   DatePicker,
   Tag,
+  Descriptions,
 } from 'antd';
 import {
   PlusOutlined,
@@ -24,6 +25,9 @@ import {
   FireOutlined,
   AimOutlined,
   CalendarOutlined,
+  EyeOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import type { WorkoutLog, FitnessPlan } from '../types';
 import { workoutService, planService } from '../services/api';
@@ -46,7 +50,9 @@ const WorkoutsPage: React.FC = () => {
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLog | null>(null);
+  const [viewingWorkout, setViewingWorkout] = useState<WorkoutLog | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [form] = Form.useForm();
 
@@ -102,6 +108,11 @@ const WorkoutsPage: React.FC = () => {
       workout_date: dayjs(record.workout_date),
     });
     setModalVisible(true);
+  };
+
+  const handleView = (record: WorkoutLog) => {
+    setViewingWorkout(record);
+    setDetailVisible(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -236,6 +247,13 @@ const WorkoutsPage: React.FC = () => {
       width: 150,
       render: (_: any, record: WorkoutLog) => (
         <Space>
+          <Button
+            type="link"
+            icon={<EyeOutlined />}
+            onClick={() => handleView(record)}
+          >
+            查看
+          </Button>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
             编辑
           </Button>
@@ -393,6 +411,79 @@ const WorkoutsPage: React.FC = () => {
             <TextArea rows={4} placeholder="记录训练感受、突破等..." />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 详情弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <FileTextOutlined />
+            <span>训练详情</span>
+          </Space>
+        }
+        open={detailVisible}
+        onCancel={() => setDetailVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailVisible(false)}>
+            关闭
+          </Button>,
+        ]}
+        width={600}
+      >
+        {viewingWorkout && (
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="训练日期" span={2}>
+              <Space>
+                <CalendarOutlined />
+                {new Date(viewingWorkout.workout_date).toLocaleDateString('zh-CN')}
+              </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="训练计划" span={2}>
+              {viewingWorkout.plan_name ? (
+                <Tag icon={<AimOutlined />} color="blue">
+                  {viewingWorkout.plan_name}
+                  {viewingWorkout.plan_id && plans.find(p => p.id === viewingWorkout.plan_id) && (
+                    <span style={{ marginLeft: 8 }}>
+                      ({DIFFICULTY_LABELS[plans.find(p => p.id === viewingWorkout.plan_id)!.difficulty]})
+                    </span>
+                  )}
+                </Tag>
+              ) : (
+                <Text type="secondary">自由训练</Text>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="训练时长">
+              <Space>
+                <ClockCircleOutlined />
+                <Text>{viewingWorkout.duration_minutes} 分钟</Text>
+              </Space>
+            </Descriptions.Item>
+            <Descriptions.Item label="消耗热量">
+              {viewingWorkout.calories_burned ? (
+                <Space>
+                  <FireOutlined style={{ color: '#E91E63' }} />
+                  <Text>{viewingWorkout.calories_burned} kcal</Text>
+                </Space>
+              ) : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="训练强度" span={2}>
+              <Tag color={getIntensityColor(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}>
+                {getIntensityLabel(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}
+              </Tag>
+            </Descriptions.Item>
+            {viewingWorkout.notes && (
+              <Descriptions.Item label="备注" span={2}>
+                <Text>{viewingWorkout.notes}</Text>
+              </Descriptions.Item>
+            )}
+            <Descriptions.Item label="记录时间" span={2}>
+              <Space>
+                <CalendarOutlined />
+                {new Date(viewingWorkout.created_at).toLocaleString('zh-CN')}
+              </Space>
+            </Descriptions.Item>
+          </Descriptions>
+        )}
       </Modal>
     </div>
   );
