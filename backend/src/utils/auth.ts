@@ -47,7 +47,14 @@ export const hashPassword = async (password: string): Promise<string> => {
  * 比对密码
  */
 export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
-  return bcrypt.compare(password, hash);
+  try {
+    const result = await bcrypt.compare(password, hash);
+    console.log('🔐 密码比对结果:', { password, hash: hash.substring(0, 30) + '...', result });
+    return result;
+  } catch (error) {
+    console.error('❌ 密码比对失败:', error);
+    throw error;
+  }
 };
 
 /**

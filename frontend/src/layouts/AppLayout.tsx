@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Typography, message } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   HomeOutlined,
@@ -13,8 +13,8 @@ import {
 import type { User } from '../types';
 import './AppLayout.css';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { Header, Sider, Content } = Layout;
-const { Title, Text } = Typography;
 
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
@@ -24,6 +24,23 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const hasInitializedRef = useRef(false);
 
+  // 加载用户信息的函数
+  const loadUser = () => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (e) {
+        console.error('解析用户数据失败:', e);
+      }
+    } else {
+      setIsAuthenticated(false);
+    }
+  };
+
+  // 初始化和监听用户信息变化
   useEffect(() => {
     // 只执行一次初始化检查
     if (hasInitializedRef.current) {
@@ -31,25 +48,39 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }
     hasInitializedRef.current = true;
 
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    console.log('🔐 初始化检查登录状态:', { hasToken: !!token, hasUser: !!userData });
+    loadUser();
+    console.log('🔐 初始化检查登录状态');
+  }, []);
 
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (e) {
-        console.error('解析用户数据失败:', e);
-        localStorage.clear();
-        setIsAuthenticated(false);
+  // 监听 storage 事件（其他标签页修改 localStorage 时触发）
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user') {
+        console.log('📡 AppLayout 检测到 localStorage 变化');
+        loadUser();
       }
-    } else {
-      console.log('❌ 用户未登录，保持未认证状态');
-      setIsAuthenticated(false);
-    }
-  }, []); // 空依赖数组，只执行一次
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // 监听自定义事件（同一标签页内修改后触发）
+  useEffect(() => {
+    const handleUserUpdate = () => {
+      console.log('📢 AppLayout 收到 user-updated 事件');
+      loadUser();
+    };
+
+    window.addEventListener('user-updated', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('user-updated', handleUserUpdate);
+    };
+  }, []);
 
   // 退出登录
   const handleLogout = () => {

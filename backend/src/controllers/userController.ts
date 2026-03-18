@@ -257,15 +257,25 @@ export const getUserById = async (req: Request, res: Response) => {
  */
 export const updateCurrentUser = async (req: Request, res: Response) => {
   try {
+    const { username, email, phone, avatar } = req.body;
+    const userId = req.user!.userId;
+
+    console.log('📨 PUT /api/auth/me - 请求参数:', {
+      username,
+      email,
+      phone,
+      avatar,
+      avatarLength: avatar ? avatar.length : 0,
+      avatarStart: avatar ? avatar.substring(0, 30) : 'N/A',
+      userId,
+    });
+
     if (!req.user) {
       return res.status(401).json({
         success: false,
         error: '未认证',
       });
     }
-
-    const { username, email, phone, avatar } = req.body;
-    const userId = req.user.userId;
 
     // 检查用户名或邮箱是否已被其他用户使用
     if (username || email) {
@@ -330,11 +340,29 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
       message: '用户信息更新成功',
       data: result.rows[0],
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('更新用户信息失败:', error);
+
+    // 返回详细的错误信息
+    let errorMessage = '更新用户信息失败';
+
+    if (error?.message) {
+      // 数据库字段长度限制错误
+      if (error.message.includes('value too long') || error.message.includes('string too long')) {
+        errorMessage = '头像数据过大，请选择更小的图片（建议小于 100KB）';
+      }
+      // 数据库其他错误
+      else if (error.message.includes('duplicate key')) {
+        errorMessage = '用户名或邮箱已被使用';
+      }
+      else {
+        errorMessage = error.message;
+      }
+    }
+
     res.status(500).json({
       success: false,
-      error: '更新用户信息失败',
+      error: errorMessage,
     });
   }
 };

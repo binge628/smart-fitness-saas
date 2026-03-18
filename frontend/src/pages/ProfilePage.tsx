@@ -26,8 +26,8 @@ import type { User } from '../types';
 const { Title, Text } = Typography;
 
 const ProfilePage: React.FC = () => {
-  const form = Form.useForm();
-  const passwordForm = Form.useForm();
+  const [form] = Form.useForm();
+  const [passwordForm] = Form.useForm();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
@@ -37,22 +37,29 @@ const ProfilePage: React.FC = () => {
   const [isAvatarHover, setIsAvatarHover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 加载用户信息
   React.useEffect(() => {
     const loadUserProfile = async () => {
       try {
         const res = await authService.getMe();
         setUser(res.data);
-        form.setFieldsValue({
-          username: res.data.username,
-          email: res.data.email,
-          phone: res.data.phone,
-        });
       } catch (error) {
         message.error('加载用户信息失败');
       }
     };
     loadUserProfile();
   }, []);
+
+  // 编辑资料弹窗打开时，同步当前用户数据到表单
+  React.useEffect(() => {
+    if (profileModalVisible && user) {
+      form.setFieldsValue({
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+      });
+    }
+  }, [profileModalVisible, user, form]);
 
   const handleUpdateProfile = async () => {
     try {
@@ -126,16 +133,31 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleConfirmAvatar = async () => {
+    if (!previewAvatar) {
+      message.error('请先选择图片');
+      return;
+    }
+
+    if (!previewAvatar.startsWith('data:image/')) {
+      message.error('请选择有效的图片文件（JPG/PNG/GIF/WebP）');
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await authService.updateMe({ avatar: previewAvatar });
       setUser(res.data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      console.log('📤 ProfilePage 更新头像成功，触发 user-updated 事件');
+      // 通知 AppLayout 更新显示的头像
+      window.dispatchEvent(new CustomEvent('user-updated'));
       message.success('头像更新成功');
       setAvatarModalVisible(false);
       setPreviewAvatar('');
-      localStorage.setItem('user', JSON.stringify(res.data));
-    } catch (error) {
-      message.error(error?.error || '更新头像失败');
+    } catch (error: any) {
+      // 显示后端返回的详细错误信息
+      const errorMessage = error?.response?.data?.error || error?.error || '更新用户信息失败';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -227,6 +249,7 @@ const ProfilePage: React.FC = () => {
               <Button
                 type="primary"
                 style={{ width: '100%' }}
+                disabled={!user}
                 onClick={() => setProfileModalVisible(true)}
               >
                 编辑资料
@@ -305,11 +328,13 @@ const ProfilePage: React.FC = () => {
         title="编辑资料"
         open={profileModalVisible}
         onOk={handleUpdateProfile}
-        onCancel={() => setProfileModalVisible(false)}
+        onCancel={() => {
+    setProfileModalVisible(false);
+    form.resetFields();
+  }}
         confirmLoading={loading}
-        destroyOnHidden
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" preserve={true} initialValues={user || undefined}>
           <Form.Item
             label="用户名"
             name="username"
@@ -341,11 +366,13 @@ const ProfilePage: React.FC = () => {
         title="修改密码"
         open={passwordModalVisible}
         onOk={handleChangePassword}
-        onCancel={() => setPasswordModalVisible(false)}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          passwordForm.resetFields();
+        }}
         confirmLoading={loading}
-        destroyOnHidden
       >
-        <Form form={passwordForm} layout="vertical">
+        <Form form={passwordForm} layout="vertical" preserve={false}>
           <Form.Item
             label="当前密码"
             name="oldPassword"
@@ -393,7 +420,6 @@ const ProfilePage: React.FC = () => {
           setPreviewAvatar('');
         }}
         confirmLoading={loading}
-        destroyOnHidden
         width={400}
       >
         <div style={{ textAlign: 'center', padding: '24px 0' }}>
