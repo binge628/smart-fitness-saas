@@ -21,6 +21,8 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
+  SearchOutlined,
+  FilterOutlined,
 } from '@ant-design/icons';
 import type { FitnessPlan } from '../types';
 import { planService } from '../services/api';
@@ -42,6 +44,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 };
 
 const PlansPage: React.FC = () => {
+  const [originalPlans, setOriginalPlans] = useState<FitnessPlan[]>([]);
   const [plans, setPlans] = useState<FitnessPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -49,22 +52,71 @@ const PlansPage: React.FC = () => {
   const [editingPlan, setEditingPlan] = useState<FitnessPlan | null>(null);
   const [viewingPlan, setViewingPlan] = useState<FitnessPlan | null>(null);
   const [filterMy, setFilterMy] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState<string | undefined>();
+  const [typeFilter, setTypeFilter] = useState<boolean | undefined>();
   const [form] = Form.useForm();
 
   useEffect(() => {
-    loadPlans();
+    loadOriginalData();
   }, [filterMy]);
 
-  const loadPlans = async () => {
+  // 加载原始数据
+  const loadOriginalData = async () => {
     setLoading(true);
     try {
       const res = filterMy ? await planService.getMyPlans() : await planService.getPlans();
+      setOriginalPlans(res.data || []);
       setPlans(res.data || []);
     } catch (error) {
       message.error('加载健身计划失败');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 搜索和筛选
+  const handleSearch = () => {
+    let filtered = [...originalPlans];
+
+    // 搜索框过滤
+    if (searchText) {
+      filtered = filtered.filter(plan =>
+        plan.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        plan.description?.toLowerCase().includes(searchText.toLowerCase()) ||
+        plan.target_goal?.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    // 难度过滤
+    if (difficultyFilter) {
+      filtered = filtered.filter(plan => plan.difficulty === difficultyFilter);
+    }
+
+    // 类型过滤
+    if (typeFilter !== undefined) {
+      filtered = filtered.filter(plan => plan.is_template === typeFilter);
+    }
+
+    setPlans(filtered);
+  };
+
+  // 应用搜索和筛选
+  useEffect(() => {
+    handleSearch();
+  }, [searchText, difficultyFilter, typeFilter, originalPlans]);
+
+  // 重置筛选
+  const handleResetFilter = () => {
+    setSearchText('');
+    setDifficultyFilter(undefined);
+    setTypeFilter(undefined);
+    handleSearch();
+  };
+
+  const handleView = (record: FitnessPlan) => {
+    setViewingPlan(record);
+    setDetailVisible(true);
   };
 
   const handleCreate = () => {
@@ -77,11 +129,6 @@ const PlansPage: React.FC = () => {
     setEditingPlan(record);
     form.setFieldsValue(record);
     setModalVisible(true);
-  };
-
-  const handleView = (record: FitnessPlan) => {
-    setViewingPlan(record);
-    setDetailVisible(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -204,19 +251,61 @@ const PlansPage: React.FC = () => {
           </Title>
         </Col>
         <Col>
-          <Space>
-            <Button
-              type={filterMy ? 'primary' : 'default'}
-              onClick={() => setFilterMy(!filterMy)}
-            >
-              {filterMy ? '查看全部' : '只看我的'}
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-              新建计划
-            </Button>
-          </Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
+            新建计划
+          </Button>
+          <Button onClick={() => setFilterMy(!filterMy)}>
+            筛选
+          </Button>
         </Col>
       </Row>
+
+      {/* 搜索和筛选栏 */}
+      {!filterMy && (
+        <Card variant="outlined" style={{ marginBottom: 16 }}>
+          <Row gutter={16}>
+            <Col xs={24} sm={12} lg={6}>
+              <Input.Search
+                placeholder="搜索计划名称、目标..."
+                value={searchText}
+                onChange={e => setSearchText(e.target.value)}
+                onSearch={handleSearch}
+                enterButton
+                allowClear
+                style={{ marginBottom: 16, width: '100%' }}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={12}>
+              <Space style={{ width: '100%' }}>
+                <Select
+                  placeholder="难度筛选"
+                  value={difficultyFilter}
+                  onChange={setDifficultyFilter}
+                  allowClear
+                  style={{ width: '160px' }}
+                >
+                  <Option value="beginner">初级</Option>
+                  <Option value="intermediate">中级</Option>
+                  <Option value="advanced">高级</Option>
+                </Select>
+                <Select
+                  placeholder="类型筛选"
+                  value={typeFilter}
+                  onChange={setTypeFilter}
+                  allowClear
+                  style={{ width: '150px' }}
+                >
+                  <Option value={true}>模板计划</Option>
+                  <Option value={false}>个人计划</Option>
+                </Select>
+                <Button onClick={handleResetFilter}>
+                  重置
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+      )}
 
       <Card variant="outlined">
         <Table
