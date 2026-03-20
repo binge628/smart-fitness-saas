@@ -10,6 +10,7 @@ import planRoutes from './routes/planRoutes';
 import gymRoutes from './routes/gymRoutes';
 import healthDataRoutes from './routes/healthDataRoutes';
 import workoutRoutes from './routes/workoutRoutes';
+import SwaggerDoc from '../swagger';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -71,8 +72,14 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
+// 集成 Swagger API 文档
+SwaggerDoc(app);
+
 // 启动服务器
 app.listen(PORT, () => {
+  console.log(`Server running on: http://localhost:${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`API Docs: http://localhost:${PORT}/api-docs`);
   console.log(`\n========================================`);
   console.log(`🏋  Smart Fitness SaaS API Server`);
   console.log(`========================================`);
