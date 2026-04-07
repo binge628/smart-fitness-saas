@@ -106,7 +106,6 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     const user = result.rows[0];
-    console.log('📦 找到用户:', { id: user.id, username: user.username });
 
     // 检查用户状态
     if (user.status !== 'active') {
@@ -259,16 +258,6 @@ export const updateCurrentUser = async (req: Request, res: Response) => {
   try {
     const { username, email, phone, avatar } = req.body;
     const userId = req.user!.userId;
-
-    console.log('📨 PUT /api/auth/me - 请求参数:', {
-      username,
-      email,
-      phone,
-      avatar,
-      avatarLength: avatar ? avatar.length : 0,
-      avatarStart: avatar ? avatar.substring(0, 30) : 'N/A',
-      userId,
-    });
 
     if (!req.user) {
       return res.status(401).json({

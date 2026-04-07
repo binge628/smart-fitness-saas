@@ -143,8 +143,6 @@ export const getWorkoutStats = async (req: Request, res: Response) => {
   try {
     const { start_date, end_date } = req.query;
 
-    console.log('📊 获取训练日志统计 - 用户ID:', req.user?.userId, '参数:', { start_date, end_date });
-
     const userId = req.user!.userId;
 
     let query = `
@@ -172,11 +170,7 @@ export const getWorkoutStats = async (req: Request, res: Response) => {
       paramIndex++;
     }
 
-    console.log('执行的SQL:', query, '参数:', params);
-
     const result = await pool.query(query, params);
-
-    console.log('查询结果:', result.rows[0]);
 
     res.json({
       success: true,
@@ -187,7 +181,6 @@ export const getWorkoutStats = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: '获取训练日志统计失败',
-      debug: error instanceof Error ? error.message : String(error),
     });
   }
 };

@@ -1,6 +1,5 @@
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
-const path = require('path');
 
 const options = {
   definition: {
@@ -26,14 +25,9 @@ const options = {
 
 const specs = swaggerJsdoc(options);
 
-app.use('/api-docs', swaggerUi.serve, setup(specs));
+function SwaggerDoc(app) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+}
 
-/**
- * @openapi
- * @title 智慧健身 SaaS 系统 API 文档
- * @version 1.0.0
- * @description 基于 SaaS 模式的智慧健身管理系统 API 文档
- */
-const specs = swaggerJsdoc(options);
-
-app.use('/api-docs', swaggerUi.setup(specs));
+module.exports = SwaggerDoc;
+module.exports.default = SwaggerDoc;

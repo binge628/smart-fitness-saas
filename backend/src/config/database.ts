@@ -38,7 +38,6 @@ if (connectionString) {
 
 console.log('数据库配置检查:', {
   hasConnectionString: !!connectionString,
-  connectionString: connectionString ? connectionString.substring(0, 30) + '...' : 'none',
   hasDbHost: !!process.env.DB_HOST,
 });
 

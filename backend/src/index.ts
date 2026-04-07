@@ -15,11 +15,9 @@ import SwaggerDoc from '../swagger';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// 请求日志（放在 CORS 之前）
+// 请求日志（仅记录方法和路径，不打印敏感信息）
 app.use((req, res, next) => {
-  console.log(`📥 ${new Date().toISOString()} - ${req.method} ${req.path}`);
-  console.log(`📦 Headers:`, req.headers);
-  console.log(`📦 Body:`, JSON.stringify(req.body, null, 2));
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 

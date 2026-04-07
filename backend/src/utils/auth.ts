@@ -2,7 +2,11 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
 // JWT 配置
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_key_change_in_production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET 环境变量未设置，服务无法安全启动。请在 .env 文件中配置 JWT_SECRET。');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
@@ -47,14 +51,7 @@ export const hashPassword = async (password: string): Promise<string> => {
  * 比对密码
  */
 export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
-  try {
-    const result = await bcrypt.compare(password, hash);
-    console.log('🔐 密码比对结果:', { password, hash: hash.substring(0, 30) + '...', result });
-    return result;
-  } catch (error) {
-    console.error('❌ 密码比对失败:', error);
-    throw error;
-  }
+  return bcrypt.compare(password, hash);
 };
 
 /**
