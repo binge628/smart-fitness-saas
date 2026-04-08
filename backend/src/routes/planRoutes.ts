@@ -8,6 +8,8 @@ import {
   getMyPlans,
 } from '../controllers/planController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { validateBody, validateParams } from '../utils/validation';
+import { createPlanSchema, updatePlanSchema, uuidParamSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -29,18 +31,18 @@ router.get('/my', getMyPlans);
 
 // 创建计划
 // 权限: 所有认证用户可创建自己的计划，教练可创建模板
-router.post('/', createPlan);
+router.post('/', validateBody(createPlanSchema), createPlan);
 
 // 获取计划详情 /api/plans/:id
 // 权限: 所有认证用户可访问
-router.get('/:id', getPlanById);
+router.get('/:id', validateParams(uuidParamSchema), getPlanById);
 
 // 更新计划 /api/plans/:id
 // 权限: 计划创建者、健身房管理员、管理员可修改
-router.put('/:id', updatePlan);
+router.put('/:id', validateParams(uuidParamSchema), validateBody(updatePlanSchema), updatePlan);
 
 // 删除计划 /api/plans/:id
 // 权限: 计划创建者、健身房管理员、管理员可删除
-router.delete('/:id', deletePlan);
+router.delete('/:id', validateParams(uuidParamSchema), deletePlan);
 
 export default router;

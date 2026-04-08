@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog } from '../types';
+import { useAuthStore } from '../stores/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -15,7 +16,7 @@ const apiClient = axios.create({
 // 请求拦截器 - 添加 Token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -33,8 +34,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      useAuthStore.getState().logout();
       window.location.href = '/login';
     }
     return Promise.reject(error.response?.data || error.message);

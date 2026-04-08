@@ -3,19 +3,19 @@ import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined, PhoneOutlined,MailOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const login = useAuthStore((s) => s.login);
 
   const onFinish = async (values: { username: string; email: string; password: string; phone?: string }) => {
     setLoading(true);
     try {
       const response = await authService.register(values);
       if (response.success && response.data) {
-        // 保存 token 和用户信息
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        login(response.data.token, response.data.user);
         message.success('注册成功！');
         navigate('/');
       } else {

@@ -10,6 +10,7 @@ import planRoutes from './routes/planRoutes';
 import gymRoutes from './routes/gymRoutes';
 import healthDataRoutes from './routes/healthDataRoutes';
 import workoutRoutes from './routes/workoutRoutes';
+import { errorHandler } from './middleware/errorHandler';
 import SwaggerDoc from '../swagger';
 
 const app = express();
@@ -60,15 +61,15 @@ app.use('/api/workouts', workoutRoutes);
 // 404 处理
 app.use((req, res) => {
   console.log(`❌ 404 - ${req.path}`);
-  res.status(404).json({ error: 'Not Found', path: req.path });
+  res.status(404).json({ 
+    success: false, 
+    error: '请求的资源不存在',
+    path: req.path 
+  });
 });
 
-// 全局错误处理
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('💥 Error:', err.message);
-  console.error('📋 Stack:', err.stack);
-  res.status(500).json({ error: err.message || 'Internal Server Error' });
-});
+// 统一错误处理中间件
+app.use(errorHandler);
 
 // 集成 Swagger API 文档
 SwaggerDoc(app);

@@ -13,6 +13,8 @@ import {
   getMyMemberships,
 } from '../controllers/gymController';
 import { authMiddleware, requireRole } from '../middleware/authMiddleware';
+import { validateBody, validateParams } from '../utils/validation';
+import { createGymSchema, updateGymSchema, addMemberSchema, updateMemberSchema, uuidParamSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -38,19 +40,19 @@ router.get('/memberships/me', getMyMemberships);
 
 // 创建健身房
 // 权限: 健身房管理员、管理员可创建
-router.post('/', requireRole('admin', 'gym_admin'), createGym);
+router.post('/', requireRole('admin', 'gym_admin'), validateBody(createGymSchema), createGym);
 
 // 健身房详情 /api/gyms/:id
 // 权限: 所有认证用户可访问
-router.get('/:id', getGymById);
+router.get('/:id', validateParams(uuidParamSchema), getGymById);
 
 // 更新健身房 /api/gyms/:id
 // 权限: 健身房所有者、管理员可更新
-router.put('/:id', updateGym);
+router.put('/:id', validateParams(uuidParamSchema), validateBody(updateGymSchema), updateGym);
 
 // 删除健身房 /api/gyms/:id
 // 权限: 健身房所有者、管理员可删除
-router.delete('/:id', deleteGym);
+router.delete('/:id', validateParams(uuidParamSchema), deleteGym);
 
 /**
  * 健身房会员管理路由 /api/gyms/:id/members
@@ -58,15 +60,15 @@ router.delete('/:id', deleteGym);
 
 // 获取健身房会员列表
 // 权限: 健身房管理员、管理员可查看
-router.get('/:id/members', getGymMembers);
+router.get('/:id/members', validateParams(uuidParamSchema), getGymMembers);
 
 // 添加会员到健身房
 // 权限: 健身房管理员、管理员可操作
-router.post('/:id/members', addGymMember);
+router.post('/:id/members', validateParams(uuidParamSchema), validateBody(addMemberSchema), addGymMember);
 
 // 更新会员信息 /api/gyms/:gymId/members/:userId
 // 权限: 健身房管理员、管理员可操作
-router.put('/:gymId/members/:userId', updateGymMember);
+router.put('/:gymId/members/:userId', validateBody(updateMemberSchema), updateGymMember);
 
 // 移除会员 /api/gyms/:gymId/members/:userId
 // 权限: 健身房管理员、管理员可操作

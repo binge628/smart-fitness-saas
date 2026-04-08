@@ -2,38 +2,29 @@ import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate, Navigate } from 'react-router-dom';
+import { authService } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+  const login = useAuthStore((s) => s.login);
 
-  // 正常登录 - 调用后端 API
-  const handleRealLogin = async (values: { username: string; password: string }) => {
+  const handleLogin = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+      const response = await authService.login(values);
+      if (response.success && response.data) {
+        login(response.data.token, response.data.user);
         message.success('登录成功！');
         setShouldRedirect(true);
       } else {
-        message.error(data.error || '登录失败');
+        message.error(response.message || '登录失败');
       }
-    } catch (error) {
-      message.error('连接服务器失败，请检查后端是否启动');
-      console.error('登录错误:', error);
+    } catch (error: any) {
+      message.error(error?.error || '登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }
@@ -60,7 +51,7 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <Form form={form} layout="vertical" onFinish={handleRealLogin}>
+        <Form form={form} layout="vertical" onFinish={handleLogin}>
           <Form.Item
             label="用户名"
             name="username"

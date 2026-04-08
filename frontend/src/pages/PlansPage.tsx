@@ -21,8 +21,6 @@ import {
   EditOutlined,
   DeleteOutlined,
   EyeOutlined,
-  SearchOutlined,
-  FilterOutlined,
 } from '@ant-design/icons';
 import type { FitnessPlan } from '../types';
 import { planService } from '../services/api';
@@ -139,7 +137,7 @@ const PlansPage: React.FC = () => {
         try {
           await planService.deletePlan(id);
           message.success('删除成功');
-          loadPlans();
+          loadOriginalData();
         } catch (error) {
           message.error('删除失败');
         }
@@ -158,7 +156,7 @@ const PlansPage: React.FC = () => {
         message.success('创建成功');
       }
       setModalVisible(false);
-      loadPlans();
+      loadOriginalData();
     } catch (error) {
       message.error('操作失败');
     }

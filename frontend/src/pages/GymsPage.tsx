@@ -28,6 +28,7 @@ import { gymService } from '../services/api';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'green',

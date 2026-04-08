@@ -8,6 +8,8 @@ import {
   deleteWorkout,
 } from '../controllers/workoutController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { validateBody, validateParams } from '../utils/validation';
+import { createWorkoutSchema, updateWorkoutSchema, uuidParamSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -33,18 +35,18 @@ router.get('/stats', getWorkoutStats);
 
 // 创建训练日志
 // 权限: 所有认证用户
-router.post('/', createWorkout);
+router.post('/', validateBody(createWorkoutSchema), createWorkout);
 
 // 获取训练日志详情 /api/workouts/:id
 // 权限: 所有认证用户
-router.get('/:id', getWorkoutById);
+router.get('/:id', validateParams(uuidParamSchema), getWorkoutById);
 
 // 更新训练日志 /api/workouts/:id
 // 权限: 仅创建者和管理员
-router.put('/:id', updateWorkout);
+router.put('/:id', validateParams(uuidParamSchema), validateBody(updateWorkoutSchema), updateWorkout);
 
 // 删除训练日志 /api/workouts/:id
 // 权限: 仅创建者和管理员
-router.delete('/:id', deleteWorkout);
+router.delete('/:id', validateParams(uuidParamSchema), deleteWorkout);
 
 export default router;

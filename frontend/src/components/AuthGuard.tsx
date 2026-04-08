@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../utils/permission';
+import { useAuthStore } from '../stores/authStore';
 
 export interface AuthGuardProps {
   /** 子元素 */
@@ -15,25 +15,17 @@ export interface AuthGuardProps {
  */
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) => {
   const location = useLocation();
+  const { isAuthenticated, user } = useAuthStore();
 
   // 检查是否已登录
-  if (!isAuthenticated()) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // 检查角色权限
-  if (allowedRoles && allowedRoles.length > 0) {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        if (!allowedRoles.includes(user.role)) {
-          // 角色不符，重定向到首页
-          return <Navigate to="/" replace />;
-        }
-      } catch {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-      }
+  if (allowedRoles && allowedRoles.length > 0 && user) {
+    if (!allowedRoles.includes(user.role)) {
+      return <Navigate to="/" replace />;
     }
   }
 
@@ -46,9 +38,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) 
  */
 export const PublicAuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
 
-  if (isAuthenticated()) {
-    // 已登录用户访问登录/注册页，重定向到首页或之前尝试访问的页面
+  if (isAuthenticated) {
     const from = (location.state as { from?: string })?.from || '/';
     return <Navigate to={from} replace />;
   }

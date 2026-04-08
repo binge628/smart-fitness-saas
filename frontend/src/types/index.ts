@@ -89,6 +89,7 @@ export interface ApiResponse<T = any> {
   message?: string;
   data?: T;
   count?: number;
+  error?: string;
 }
 
 // 认证响应类型

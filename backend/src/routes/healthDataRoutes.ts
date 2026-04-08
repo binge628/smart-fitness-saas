@@ -8,6 +8,8 @@ import {
   deleteHealthData,
 } from '../controllers/healthDataController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { validateBody, validateParams } from '../utils/validation';
+import { createHealthDataSchema, updateHealthDataSchema, uuidParamSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -37,14 +39,14 @@ router.get('/date/:date', getHealthDataByDate);
 
 // 创建健康数据记录
 // 权限: 所有认证用户
-router.post('/', createHealthData);
+router.post('/', validateBody(createHealthDataSchema), createHealthData);
 
 // 更新健康数据 /api/health/:id
 // 权限: 仅创建者（用户自己）和管理员
-router.put('/:id', updateHealthData);
+router.put('/:id', validateParams(uuidParamSchema), validateBody(updateHealthDataSchema), updateHealthData);
 
 // 删除健康数据 /api/health/:id
 // 权限: 仅创建者（用户自己）和管理员
-router.delete('/:id', deleteHealthData);
+router.delete('/:id', validateParams(uuidParamSchema), deleteHealthData);
 
 export default router;

@@ -1,6 +1,8 @@
 import express from 'express';
 import { registerUser, loginUser, getCurrentUser, updateCurrentUser, changePassword } from '../controllers/userController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { validateBody } from '../utils/validation';
+import { registerSchema, loginSchema, updateUserSchema, changePasswordSchema } from '../schemas';
 
 const router = express.Router();
 
@@ -37,7 +39,7 @@ const router = express.Router();
  *       '200':
  *         description: 注册成功
  */
-router.post('/register', registerUser);
+router.post('/register', validateBody(registerSchema), registerUser);
 
 /**
  * @openapi
@@ -70,7 +72,7 @@ router.post('/register', registerUser);
  *       '403':
  *         description: 账户已被禁用
  */
-router.post('/login', loginUser);
+router.post('/login', validateBody(loginSchema), loginUser);
 
 /**
  * @openapi
@@ -120,7 +122,7 @@ router.get('/me', authMiddleware, getCurrentUser);
  *       '200':
  *         description: 更新成功
  */
-router.put('/me', authMiddleware, updateCurrentUser);
+router.put('/me', authMiddleware, validateBody(updateUserSchema), updateCurrentUser);
 
 /**
  * @openapi
@@ -153,6 +155,6 @@ router.put('/me', authMiddleware, updateCurrentUser);
  *       '200':
  *         description: 修改成功
  */
-router.put('/me/password', authMiddleware, changePassword);
+router.put('/me/password', authMiddleware, validateBody(changePasswordSchema), changePassword);
 
 export default router;

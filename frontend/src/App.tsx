@@ -42,25 +42,47 @@ const customTheme = {
   },
 };
 
+/**
+ * 受保护的应用布局路由
+ * 统一处理认证守卫和应用布局
+ */
+const ProtectedLayout: React.FC = () => (
+  <AuthGuard>
+    <AppLayout />
+  </AuthGuard>
+);
+
+/**
+ * 公开认证布局路由
+ * 已登录用户自动重定向到首页
+ */
+const PublicLayout: React.FC = () => (
+  <PublicAuthGuard>
+    <AuthLayout />
+  </PublicAuthGuard>
+);
+
 function App() {
   return (
     <ConfigProvider theme={customTheme} locale={zhCN}>
       <AntApp>
         <BrowserRouter>
           <Routes>
-            {/* 认证相关路由 - 嵌套路由 */}
-            <Route element={<PublicAuthGuard><AuthLayout /></PublicAuthGuard>}>
+            {/* 公开路由 - 登录/注册 */}
+            <Route element={<PublicLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Route>
 
-            {/* 主应用路由 - 需要认证 */}
-            <Route path="/" element={<AuthGuard><AppLayout><HomePage /></AppLayout></AuthGuard>} />
-            <Route path="/plans" element={<AuthGuard><AppLayout><PlansPage /></AppLayout></AuthGuard>} />
-            <Route path="/gyms" element={<AuthGuard><AppLayout><GymsPage /></AppLayout></AuthGuard>} />
-            <Route path="/health" element={<AuthGuard><AppLayout><HealthDataPage /></AppLayout></AuthGuard>} />
-            <Route path="/workouts" element={<AuthGuard><AppLayout><WorkoutsPage /></AppLayout></AuthGuard>} />
-            <Route path="/profile" element={<AuthGuard><AppLayout><ProfilePage /></AppLayout></AuthGuard>} />
+            {/* 受保护路由 - 需要认证 */}
+            <Route element={<ProtectedLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/plans" element={<PlansPage />} />
+              <Route path="/gyms" element={<GymsPage />} />
+              <Route path="/health" element={<HealthDataPage />} />
+              <Route path="/workouts" element={<WorkoutsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
 
             {/* 默认重定向 */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -34,7 +34,6 @@ const ProfilePage: React.FC = () => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState('');
-  const [isAvatarHover, setIsAvatarHover] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 加载用户信息
@@ -42,7 +41,7 @@ const ProfilePage: React.FC = () => {
     const loadUserProfile = async () => {
       try {
         const res = await authService.getMe();
-        setUser(res.data);
+        setUser(res.data ?? null);
       } catch (error) {
         message.error('加载用户信息失败');
       }
@@ -66,11 +65,11 @@ const ProfilePage: React.FC = () => {
       const values = await form.validateFields();
       setLoading(true);
       const res = await authService.updateMe(values);
-      setUser(res.data);
+      setUser(res.data ?? null);
       message.success('用户信息更新成功');
       setProfileModalVisible(false);
       localStorage.setItem('user', JSON.stringify(res.data));
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.error || '更新用户信息失败');
     } finally {
       setLoading(false);
@@ -88,7 +87,7 @@ const ProfilePage: React.FC = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
-    } catch (error) {
+    } catch (error: any) {
       message.error(error?.error || '修改密码失败');
     } finally {
       setLoading(false);
@@ -146,7 +145,7 @@ const ProfilePage: React.FC = () => {
     try {
       setLoading(true);
       const res = await authService.updateMe({ avatar: previewAvatar });
-      setUser(res.data);
+      setUser(res.data ?? null);
       localStorage.setItem('user', JSON.stringify(res.data));
       console.log('📤 ProfilePage 更新头像成功，触发 user-updated 事件');
       // 通知 AppLayout 更新显示的头像
