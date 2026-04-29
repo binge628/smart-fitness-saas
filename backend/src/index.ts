@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import pool from './config/database';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
@@ -29,6 +30,9 @@ app.use(cors({
 // 增加请求体大小限制以支持 base64 头像上传
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+
+// 静态文件服务 - 头像上传
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 健康检查
 app.get('/health', async (req, res) => {

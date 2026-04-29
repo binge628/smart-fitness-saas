@@ -3,7 +3,11 @@ dist
 .git
 .gitignore
 *.md
-.env*
+.env
+.env.local
 .DS_Store
 *.log
 npm-debug.log*
+uploads/*
+!uploads/avatars
+!uploads/avatars/.gitkeep

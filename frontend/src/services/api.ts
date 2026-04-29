@@ -41,6 +41,14 @@ apiClient.interceptors.response.use(
   }
 );
 
+// 补全头像相对路径为完整 URL
+const resolveAvatarUrl = (user: User | undefined): User | undefined => {
+  if (user?.avatar && user.avatar.startsWith('/uploads/')) {
+    return { ...user, avatar: `${BASE_URL}${user.avatar}` };
+  }
+  return user;
+};
+
 // 认证服务
 export const authService = {
   // 注册
@@ -52,11 +60,16 @@ export const authService = {
     apiClient.post<any, ApiResponse<AuthResponse>>('/auth/login', data),
 
   // 获取当前用户
-  getMe: () => apiClient.get<any, ApiResponse<User>>('/auth/me'),
+  getMe: async () => {
+    const res = await apiClient.get<any, ApiResponse<User>>('/auth/me');
+    return { ...res, data: resolveAvatarUrl(res.data) };
+  },
 
   // 更新当前用户信息
-  updateMe: (data: { username?: string; email?: string; phone?: string; avatar?: string }) =>
-    apiClient.put<any, ApiResponse<User>>('/auth/me', data),
+  updateMe: async (data: { username?: string; email?: string; phone?: string; avatar?: string }) => {
+    const res = await apiClient.put<any, ApiResponse<User>>('/auth/me', data);
+    return { ...res, data: resolveAvatarUrl(res.data) };
+  },
 
   // 修改密码
   changePassword: (data: { oldPassword: string; newPassword: string }) =>
@@ -71,6 +84,18 @@ export const userService = {
   // 获取指定用户
   getUserById: (id: string) =>
     apiClient.get<any, ApiResponse<User>>(`/users/${id}`),
+
+  // 上传头像
+  uploadAvatar: async (file: File): Promise<ApiResponse<User>> => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await apiClient.post<any, ApiResponse<User>>('/users/me/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return { ...response, data: resolveAvatarUrl(response.data) };
+  },
 };
 
 // 健身计划服务

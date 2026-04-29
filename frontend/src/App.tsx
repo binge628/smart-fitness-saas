@@ -9,6 +9,9 @@ import AuthLayout from './layouts/AuthLayout';
 // 守卫组件
 import { AuthGuard, PublicAuthGuard } from './components/AuthGuard';
 
+// 错误边界组件
+import ErrorBoundary from './components/ErrorBoundary';
+
 // 页面组件
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -66,28 +69,30 @@ function App() {
   return (
     <ConfigProvider theme={customTheme} locale={zhCN}>
       <AntApp>
-        <BrowserRouter>
-          <Routes>
-            {/* 公开路由 - 登录/注册 */}
-            <Route element={<PublicLayout />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <Routes>
+              {/* 公开路由 - 登录/注册 */}
+              <Route element={<PublicLayout />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+              </Route>
 
-            {/* 受保护路由 - 需要认证 */}
-            <Route element={<ProtectedLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/plans" element={<PlansPage />} />
-              <Route path="/gyms" element={<GymsPage />} />
-              <Route path="/health" element={<HealthDataPage />} />
-              <Route path="/workouts" element={<WorkoutsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
+              {/* 受保护路由 - 需要认证 */}
+              <Route element={<ProtectedLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/plans" element={<PlansPage />} />
+                <Route path="/gyms" element={<GymsPage />} />
+                <Route path="/health" element={<HealthDataPage />} />
+                <Route path="/workouts" element={<WorkoutsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+              </Route>
 
-            {/* 默认重定向 */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
+              {/* 默认重定向 */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </ErrorBoundary>
       </AntApp>
     </ConfigProvider>
   );

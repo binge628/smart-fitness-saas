@@ -20,7 +20,8 @@ import {
   LockOutlined,
   CameraOutlined,
 } from '@ant-design/icons';
-import { authService } from '../services/api';
+import { authService, userService } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 import type { User } from '../types';
 
 const { Title, Text } = Typography;
@@ -34,6 +35,7 @@ const ProfilePage: React.FC = () => {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const [previewAvatar, setPreviewAvatar] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 加载用户信息
@@ -65,10 +67,11 @@ const ProfilePage: React.FC = () => {
       const values = await form.validateFields();
       setLoading(true);
       const res = await authService.updateMe(values);
-      setUser(res.data ?? null);
+      const updatedUser = res.data ?? null;
+      setUser(updatedUser);
+      useAuthStore.getState().setUser(updatedUser);
       message.success('用户信息更新成功');
       setProfileModalVisible(false);
-      localStorage.setItem('user', JSON.stringify(res.data));
     } catch (error: any) {
       message.error(error?.error || '更新用户信息失败');
     } finally {
@@ -110,17 +113,18 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    // 1MB 限制用于避免 base64 过大
-    const maxSize = 1024 * 1024;
+    // 2MB 限制
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-      message.error('图片大小不能超过 1MB');
+      message.error('图片大小不能超过 2MB');
       return;
     }
 
+    // 预览图片
     const reader = new FileReader();
     reader.onload = () => {
-      const base64 = reader.result as string;
-      setPreviewAvatar(base64);
+      setPreviewAvatar(reader.result as string);
+      setSelectedFile(file);
       setAvatarModalVisible(true);
     };
     reader.readAsDataURL(file);
@@ -132,30 +136,23 @@ const ProfilePage: React.FC = () => {
   };
 
   const handleConfirmAvatar = async () => {
-    if (!previewAvatar) {
+    if (!selectedFile) {
       message.error('请先选择图片');
-      return;
-    }
-
-    if (!previewAvatar.startsWith('data:image/')) {
-      message.error('请选择有效的图片文件（JPG/PNG/GIF/WebP）');
       return;
     }
 
     try {
       setLoading(true);
-      const res = await authService.updateMe({ avatar: previewAvatar });
-      setUser(res.data ?? null);
-      localStorage.setItem('user', JSON.stringify(res.data));
-      console.log('📤 ProfilePage 更新头像成功，触发 user-updated 事件');
-      // 通知 AppLayout 更新显示的头像
-      window.dispatchEvent(new CustomEvent('user-updated'));
+      const res = await userService.uploadAvatar(selectedFile);
+      const updatedUser = res.data ?? null;
+      setUser(updatedUser);
+      useAuthStore.getState().setUser(updatedUser);
       message.success('头像更新成功');
       setAvatarModalVisible(false);
       setPreviewAvatar('');
+      setSelectedFile(null);
     } catch (error: any) {
-      // 显示后端返回的详细错误信息
-      const errorMessage = error?.response?.data?.error || error?.error || '更新用户信息失败';
+      const errorMessage = error?.response?.data?.error || error?.error || '上传头像失败';
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -417,6 +414,7 @@ const ProfilePage: React.FC = () => {
         onCancel={() => {
           setAvatarModalVisible(false);
           setPreviewAvatar('');
+          setSelectedFile(null);
         }}
         confirmLoading={loading}
         width={400}

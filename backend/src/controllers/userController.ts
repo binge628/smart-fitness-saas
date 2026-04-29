@@ -1,4 +1,6 @@
 import { Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
 import pool from '../config/database';
 import { hashPassword, comparePassword, generateToken, JwtPayload } from '../utils/auth';
 
@@ -552,6 +554,67 @@ export const updateUserStatus = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: '更新用户状态失败',
+    });
+  }
+};
+/**
+ * 上传头像
+ * POST /api/users/me/avatar
+ */
+export const uploadAvatar = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: '未认证',
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: '请选择要上传的图片',
+      });
+    }
+
+    const userId = req.user.userId;
+
+    // 查询用户当前头像
+    const currentAvatarResult = await pool.query(
+      'SELECT avatar FROM users WHERE id = $1',
+      [userId]
+    );
+
+    // 生成头像 URL
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    // 更新数据库
+    const result = await pool.query(
+      'UPDATE users SET avatar = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, username, email, phone, avatar, role, status, created_at',
+      [avatarUrl, userId]
+    );
+
+    // 删除旧头像文件（如果不是默认头像）
+    if (currentAvatarResult.rowCount && currentAvatarResult.rows[0].avatar) {
+      const oldAvatar = currentAvatarResult.rows[0].avatar;
+      if (oldAvatar.startsWith('/uploads/avatars/')) {
+        const oldPath = path.join(__dirname, '../../uploads/avatars', path.basename(oldAvatar));
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: '头像上传成功',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('上传头像失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '上传头像失败',
     });
   }
 };
