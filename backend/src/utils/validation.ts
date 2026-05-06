@@ -8,6 +8,7 @@ import { ZodSchema, ZodError } from 'zod';
 export const validate = (schema: ZodSchema, source: 'body' | 'query' | 'params' = 'body') => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(`[VALIDATE ${source.toUpperCase()}]`, JSON.stringify(req[source]));
       const data = schema.parse(req[source]);
       req[source] = data;
       next();

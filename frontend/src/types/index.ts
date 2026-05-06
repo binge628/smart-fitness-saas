@@ -81,6 +81,33 @@ export interface WorkoutLog {
   calories_burned?: number;
   notes?: string;
   created_at: string;
+  sets?: WorkoutSet[];
+}
+
+// 动作类型
+export interface Exercise {
+  id: string;
+  name: string;
+  muscle_group: 'chest' | 'back' | 'shoulder' | 'leg' | 'arm' | 'core' | 'full_body' | 'cardio';
+  category: 'compound' | 'isolation' | 'cardio';
+  description?: string;
+  is_preset: boolean;
+  created_at: string;
+}
+
+// 训练组数类型
+export interface WorkoutSet {
+  id: string;
+  workout_id: string;
+  exercise_id: string;
+  exercise_name?: string;
+  muscle_group?: string;
+  set_order: number;
+  weight?: number;
+  reps?: number;
+  rest_seconds?: number;
+  notes?: string;
+  created_at: string;
 }
 
 // API 响应类型

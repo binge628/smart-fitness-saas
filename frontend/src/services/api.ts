@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog } from '../types';
+import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog, Exercise, WorkoutSet } from '../types';
 import { useAuthStore } from '../stores/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -33,6 +33,7 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    console.error('[API Error]', error.response?.data || error.message);
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
       window.location.href = '/login';
@@ -222,6 +223,21 @@ export const workoutService = {
   // 删除训练日志
   deleteWorkout: (id: string) =>
     apiClient.delete<any, ApiResponse<void>>(`/workouts/${id}`),
+};
+
+// 动作库服务
+export const exerciseService = {
+  // 获取动作列表
+  getExercises: (params?: { muscle_group?: string; category?: string; search?: string; limit?: number }) =>
+    apiClient.get<any, ApiResponse<Exercise[]>>('/exercises', { params }),
+
+  // 获取动作详情
+  getExerciseById: (id: string) =>
+    apiClient.get<any, ApiResponse<Exercise>>(`/exercises/${id}`),
+
+  // 创建自定义动作
+  createExercise: (data: { name: string; muscle_group: string; category: string; description?: string }) =>
+    apiClient.post<any, ApiResponse<Exercise>>('/exercises', data),
 };
 
 export default apiClient;

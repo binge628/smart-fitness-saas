@@ -11,6 +11,7 @@ import planRoutes from './routes/planRoutes';
 import gymRoutes from './routes/gymRoutes';
 import healthDataRoutes from './routes/healthDataRoutes';
 import workoutRoutes from './routes/workoutRoutes';
+import exerciseRoutes from './routes/exerciseRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import SwaggerDoc from '../swagger';
 
@@ -61,6 +62,7 @@ app.use('/api/plans', planRoutes);
 app.use('/api/gyms', gymRoutes);
 app.use('/api/health-data', healthDataRoutes);
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/exercises', exerciseRoutes);
 
 // 404 处理
 app.use((req, res) => {

@@ -62,6 +62,16 @@ export const updatePlanSchema = z.object({
   }).optional(),
 });
 
+// 训练组数校验
+export const workoutSetSchema = z.object({
+  exercise_id: z.string().uuid('动作ID格式不正确'),
+  set_order: z.number().int('组序号必须是整数').min(1, '组序号从1开始'),
+  weight: z.number().min(0, '重量不能为负数').optional().nullable(),
+  reps: z.number().int('次数必须是整数').min(1, '次数至少1次').optional().nullable(),
+  rest_seconds: z.number().int('休息时间必须是整数').min(0, '休息时间不能为负数').optional().nullable(),
+  notes: z.string().max(200, '备注最多200个字符').optional(),
+});
+
 // 训练日志创建校验
 export const createWorkoutSchema = z.object({
   plan_id: z.string().uuid('计划ID格式不正确').optional().nullable(),
@@ -69,6 +79,7 @@ export const createWorkoutSchema = z.object({
   duration_minutes: z.number().int('训练时长必须是整数').min(1, '训练时长至少1分钟').max(600, '训练时长最多600分钟'),
   calories_burned: z.number().int('消耗热量必须是整数').min(0, '消耗热量不能为负数').optional().nullable(),
   notes: z.string().max(500, '备注最多500个字符').optional(),
+  sets: z.array(workoutSetSchema).optional(),
 });
 
 // 训练日志更新校验
@@ -77,7 +88,8 @@ export const updateWorkoutSchema = z.object({
   workout_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式不正确，应为 YYYY-MM-DD').optional(),
   duration_minutes: z.number().int('训练时长必须是整数').min(1, '训练时长至少1分钟').max(600, '训练时长最多600分钟').optional(),
   calories_burned: z.number().int('消耗热量必须是整数').min(0, '消耗热量不能为负数').optional().nullable(),
-  notes: z.string().max(500, '备注最多500个字符').optional(),
+  notes: z.string().max(500, '备注最多500个字符').optional().nullable(),
+  sets: z.array(workoutSetSchema).optional(),
 });
 
 // 健康数据创建校验
@@ -133,6 +145,18 @@ export const updateMemberSchema = z.object({
     message: '会员状态必须是 active、expired 或 suspended',
   }).optional(),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式不正确，应为 YYYY-MM-DD').optional(),
+});
+
+// 动作创建校验
+export const createExerciseSchema = z.object({
+  name: z.string().min(1, '动作名称不能为空').max(100, '动作名称最多100个字符'),
+  muscle_group: z.enum(['chest', 'back', 'shoulder', 'leg', 'arm', 'core', 'full_body', 'cardio'], {
+    message: '肌群必须是 chest/back/shoulder/leg/arm/core/full_body/cardio',
+  }),
+  category: z.enum(['compound', 'isolation', 'cardio'], {
+    message: '类别必须是 compound/isolation/cardio',
+  }),
+  description: z.string().max(500, '描述最多500个字符').optional(),
 });
 
 // 分页查询参数校验

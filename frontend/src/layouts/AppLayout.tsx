@@ -8,6 +8,7 @@ import {
   HeartOutlined,
   CalendarOutlined,
   UserOutlined,
+  ThunderboltOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
@@ -65,6 +66,13 @@ const AppLayout: React.FC = () => {
     label: '训练日志',
   };
 
+  // 动作库菜单
+  const exerciseMenuItem = {
+    key: '/exercises',
+    icon: <ThunderboltOutlined />,
+    label: '动作库',
+  };
+
   // 个人资料菜单（所有角色可见）
   const profileMenuItem = {
     key: '/profile',
@@ -79,7 +87,7 @@ const AppLayout: React.FC = () => {
 
   // 健康数据和训练日志 - 仅普通用户和管理员能看到
   if (user && (user.role === ROLES.USER || user.role === ROLES.ADMIN)) {
-    menuItems.push(healthMenuItem, workoutMenuItem);
+    menuItems.push(healthMenuItem, workoutMenuItem, exerciseMenuItem);
   }
 
   menuItems.push(profileMenuItem);

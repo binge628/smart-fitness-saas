@@ -17,6 +17,7 @@ import {
   DatePicker,
   Tag,
   Descriptions,
+  Divider,
 } from 'antd';
 import {
   PlusOutlined,
@@ -28,9 +29,11 @@ import {
   EyeOutlined,
   ClockCircleOutlined,
   FileTextOutlined,
+  MinusCircleOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
-import type { WorkoutLog, FitnessPlan } from '../types';
-import { workoutService, planService } from '../services/api';
+import type { WorkoutLog, FitnessPlan, Exercise, WorkoutSet } from '../types';
+import { workoutService, planService, exerciseService } from '../services/api';
 import dayjs from 'dayjs';
 import WorkoutStatsChart from '../components/WorkoutStatsChart';
 
@@ -45,9 +48,15 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   advanced: '高级',
 };
 
+const MUSCLE_GROUP_LABELS: Record<string, string> = {
+  chest: '胸', back: '背', shoulder: '肩', leg: '腿',
+  arm: '臂', core: '核心', full_body: '全身', cardio: '有氧',
+};
+
 const WorkoutsPage: React.FC = () => {
   const [workouts, setWorkouts] = useState<WorkoutLog[]>([]);
   const [plans, setPlans] = useState<FitnessPlan[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [stats, setStats] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -55,11 +64,20 @@ const WorkoutsPage: React.FC = () => {
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLog | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<WorkoutLog | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  // 组数临时状态
+  const [workoutSets, setWorkoutSets] = useState<Array<{
+    exercise_id: string;
+    set_order: number;
+    weight?: number;
+    reps?: number;
+    rest_seconds?: number;
+  }>>([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
     loadData();
     loadPlans();
+    loadExercises();
   }, []);
 
   const loadData = async () => {
@@ -87,18 +105,21 @@ const WorkoutsPage: React.FC = () => {
     try {
       const res = await planService.getMyPlans();
       setPlans(res.data || []);
-    } catch (error) {
-      // 静默失败
-    }
+    } catch (error) { /* silent */ }
+  };
+
+  const loadExercises = async () => {
+    try {
+      const res = await exerciseService.getExercises({ limit: 100 });
+      setExercises(res.data || []);
+    } catch (error) { /* silent */ }
   };
 
   const handleCreate = () => {
     setEditingWorkout(null);
     form.resetFields();
-    form.setFieldsValue({
-      workout_date: dayjs(),
-      duration_minutes: 60,
-    });
+    form.setFieldsValue({ workout_date: dayjs(), duration_minutes: 60 });
+    setWorkoutSets([]);
     setModalVisible(true);
   };
 
@@ -108,6 +129,15 @@ const WorkoutsPage: React.FC = () => {
       ...record,
       workout_date: dayjs(record.workout_date),
     });
+    setWorkoutSets(
+      (record.sets || []).map(s => ({
+        exercise_id: s.exercise_id,
+        set_order: s.set_order,
+        weight: s.weight || undefined,
+        reps: s.reps || undefined,
+        rest_seconds: s.rest_seconds || undefined,
+      }))
+    );
     setModalVisible(true);
   };
 
@@ -132,13 +162,45 @@ const WorkoutsPage: React.FC = () => {
     });
   };
 
+  // 组数操作
+  const addSet = () => {
+    setWorkoutSets([...workoutSets, { exercise_id: '', set_order: workoutSets.length + 1 }]);
+  };
+
+  const removeSet = (index: number) => {
+    const updated = workoutSets.filter((_, i) => i !== index).map((s, i) => ({ ...s, set_order: i + 1 }));
+    setWorkoutSets(updated);
+  };
+
+  const updateSet = (index: number, field: string, value: any) => {
+    const updated = [...workoutSets];
+    updated[index] = { ...updated[index], [field]: value };
+    setWorkoutSets(updated);
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const submitData = {
+      // 过滤掉空的 sets，并确保类型正确
+      const filteredSets = workoutSets
+        .filter(s => s.exercise_id)
+        .map(s => ({
+          exercise_id: s.exercise_id,
+          set_order: s.set_order,
+          weight: s.weight == null || s.weight === '' ? null : Number(s.weight),
+          reps: s.reps == null || s.reps === '' ? null : Number(s.reps),
+          rest_seconds: s.rest_seconds == null || s.rest_seconds === '' ? null : Number(s.rest_seconds),
+        }));
+
+      const submitData: any = {
         ...values,
         workout_date: values.workout_date.format('YYYY-MM-DD'),
+        calories_burned: values.calories_burned == null || values.calories_burned === '' ? null : Number(values.calories_burned),
+        notes: values.notes == null || values.notes === '' ? null : values.notes,
+        sets: filteredSets,
       };
+
+      console.log('[Workout Submit]', JSON.stringify(submitData));
 
       if (editingWorkout) {
         await workoutService.updateWorkout(editingWorkout.id, submitData);
@@ -149,18 +211,18 @@ const WorkoutsPage: React.FC = () => {
       }
       setModalVisible(false);
       loadData();
-    } catch (error) {
-      message.error('操作失败');
+    } catch (error: any) {
+      console.error('[Workout Error]', error);
+      message.error(error?.error || '操作失败');
     }
   };
 
   const getIntensityColor = (duration: number, calories?: number) => {
-    // 简单的强度计算逻辑
     const intensity = calories ? calories / duration : 0;
-    if (intensity > 10) return 'red'; // 高强度
-    if (intensity > 7) return 'orange'; // 中高强度
-    if (intensity > 5) return 'gold'; // 中等强度
-    return 'green'; // 低强度
+    if (intensity > 10) return 'red';
+    if (intensity > 7) return 'orange';
+    if (intensity > 5) return 'gold';
+    return 'green';
   };
 
   const getIntensityLabel = (duration: number, calories?: number) => {
@@ -171,31 +233,32 @@ const WorkoutsPage: React.FC = () => {
     return '低强度';
   };
 
+  // 获取动作名
+  const getExerciseName = (id: string) => exercises.find(e => e.id === id)?.name || '未知动作';
+
   const columns = [
     {
       title: '训练日期',
       dataIndex: 'workout_date',
       key: 'workout_date',
       render: (date: string) => (
-        <Space>
-          <CalendarOutlined />
-          <Text>{new Date(date).toLocaleDateString('zh-CN')}</Text>
-        </Space>
+        <Space><CalendarOutlined /><Text>{new Date(date).toLocaleDateString('zh-CN')}</Text></Space>
       ),
     },
     {
       title: '训练计划',
       dataIndex: 'plan_name',
       key: 'plan_name',
-      render: (planName: string) => (
-        planName ? (
-          <Tag icon={<AimOutlined />} color="blue">
-            {planName}
-          </Tag>
-        ) : (
-          <Text type="secondary">自由训练</Text>
-        )
-      ),
+      render: (planName: string) => planName ? <Tag icon={<AimOutlined />} color="blue">{planName}</Tag> : <Text type="secondary">自由训练</Text>,
+    },
+    {
+      title: '动作数',
+      key: 'exercise_count',
+      width: 80,
+      render: (_: any, record: WorkoutLog) => {
+        const count = record.sets?.length ? new Set(record.sets.map(s => s.exercise_id)).size : 0;
+        return count > 0 ? <Tag color="blue">{count} 个</Tag> : '-';
+      },
     },
     {
       title: '时长',
@@ -209,14 +272,7 @@ const WorkoutsPage: React.FC = () => {
       dataIndex: 'calories_burned',
       key: 'calories_burned',
       width: 100,
-      render: (calories: number) => (
-        calories ? (
-          <Space>
-            <FireOutlined style={{ color: '#E91E63' }} />
-            <Text>{calories} kcal</Text>
-          </Space>
-        ) : '-'
-      ),
+      render: (calories: number) => calories ? <Space><FireOutlined style={{ color: '#E91E63' }} /><Text>{calories} kcal</Text></Space> : '-',
     },
     {
       title: '强度',
@@ -232,46 +288,17 @@ const WorkoutsPage: React.FC = () => {
       title: '备注',
       dataIndex: 'notes',
       key: 'notes',
-      width: 150,
-      render: (notes: string) => {
-        if (!notes) return '-';
-        return (
-          <Text ellipsis style={{ maxWidth: 150 }}>
-            {notes}
-          </Text>
-        );
-      },
+      width: 120,
+      render: (notes: string) => notes ? <Text ellipsis style={{ maxWidth: 120 }}>{notes}</Text> : '-',
     },
     {
       title: '操作',
       key: 'action',
       render: (_: any, record: WorkoutLog) => (
         <Space size="small">
-          <Button
-            type="link"
-            size="small"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-          >
-            查看
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            编辑
-          </Button>
-          <Button
-            type="link"
-            size="small"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          >
-            删除
-          </Button>
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleView(record)}>查看</Button>
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
+          <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)}>删除</Button>
         </Space>
       ),
     },
@@ -280,102 +307,32 @@ const WorkoutsPage: React.FC = () => {
   return (
     <div>
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
-        <Col>
-          <Title level={2} style={{ margin: 0 }}>
-            📅 训练日志
-          </Title>
-        </Col>
-        <Col>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            记录训练
-          </Button>
-        </Col>
+        <Col><Title level={2} style={{ margin: 0 }}>训练日志</Title></Col>
+        <Col><Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>记录训练</Button></Col>
       </Row>
 
-      {/* 统计卡片 */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总训练次数"
-              value={stats.total_workouts || 0}
-              prefix={<CalendarOutlined />}
-              styles={{ content: { color: '#00B8D9' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总训练时长"
-              value={stats.total_duration || 0}
-              suffix="分钟"
-              prefix={<AimOutlined />}
-              styles={{ content: { color: '#00C853' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="总消耗热量"
-              value={stats.total_calories || 0}
-              suffix="kcal"
-              prefix={<FireOutlined />}
-              precision={0}
-              styles={{ content: { color: '#E91E63' } }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="平均时长"
-              value={stats.avg_duration || 0}
-              suffix="分钟"
-              precision={0}
-              styles={{ content: { color: '#FF9800' } }}
-            />
-          </Card>
-        </Col>
+        <Col xs={24} sm={12} lg={6}><Card><Statistic title="总训练次数" value={stats.total_workouts || 0} prefix={<CalendarOutlined />} styles={{ content: { color: '#00B8D9' } }} /></Card></Col>
+        <Col xs={24} sm={12} lg={6}><Card><Statistic title="总训练时长" value={stats.total_duration || 0} suffix="分钟" prefix={<AimOutlined />} styles={{ content: { color: '#00C853' } }} /></Card></Col>
+        <Col xs={24} sm={12} lg={6}><Card><Statistic title="总消耗热量" value={stats.total_calories || 0} suffix="kcal" prefix={<FireOutlined />} precision={0} styles={{ content: { color: '#E91E63' } }} /></Card></Col>
+        <Col xs={24} sm={12} lg={6}><Card><Statistic title="平均时长" value={stats.avg_duration || 0} suffix="分钟" precision={0} styles={{ content: { color: '#FF9800' } }} /></Card></Col>
       </Row>
 
-      {/* 统计图表 */}
       <WorkoutStatsChart data={workouts} />
 
-      <Card variant="outlined">
+      <Card variant="outlined" style={{ marginTop: 16 }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
           <Col>
             <Space>
               <Text>时间范围：</Text>
-              <RangePicker
-                value={dateRange}
-                onChange={(dates) => setDateRange(dates as any)}
-                format="YYYY-MM-DD"
-              />
-              <Button onClick={() => { setDateRange(null); loadData(); }}>
-                重置
-              </Button>
+              <RangePicker value={dateRange} onChange={(dates) => setDateRange(dates as any)} format="YYYY-MM-DD" />
+              <Button onClick={() => { setDateRange(null); loadData(); }}>重置</Button>
             </Space>
           </Col>
-          <Col>
-            <Button type="default" onClick={loadData}>
-              刷新
-            </Button>
-          </Col>
+          <Col><Button type="default" onClick={loadData}>刷新</Button></Col>
         </Row>
-
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={workouts}
-          loading={loading}
-          scroll={{ x: 1400 }}
-          pagination={{
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-          }}
-        />
+        <Table rowKey="id" columns={columns} dataSource={workouts} loading={loading} scroll={{ x: 1400 }}
+          pagination={{ showSizeChanger: true, showTotal: (total) => `共 ${total} 条记录` }} />
       </Card>
 
       {/* 创建/编辑弹窗 */}
@@ -384,121 +341,154 @@ const WorkoutsPage: React.FC = () => {
         open={modalVisible}
         onOk={handleSubmit}
         onCancel={() => setModalVisible(false)}
-        width={600}
+        width={700}
         destroyOnHidden
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                label="训练日期"
-                name="workout_date"
-                rules={[{ required: true, message: '请选择日期' }]}
-              >
+              <Form.Item label="训练日期" name="workout_date" rules={[{ required: true, message: '请选择日期' }]}>
                 <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                label="时长（分钟）"
-                name="duration_minutes"
-                rules={[{ required: true, message: '请输入训练时长' }]}
-              >
+              <Form.Item label="时长（分钟）" name="duration_minutes" rules={[{ required: true, message: '请输入训练时长' }]}>
                 <InputNumber min={1} max={480} style={{ width: '100%' }} placeholder="60" />
               </Form.Item>
             </Col>
           </Row>
-
           <Form.Item label="训练计划" name="plan_id">
             <Select placeholder="选择训练计划（可选）" allowClear>
-              {plans.map(plan => (
-                <Option key={plan.id} value={plan.id}>
-                  {plan.name} ({DIFFICULTY_LABELS[plan.difficulty]})
-                </Option>
-              ))}
+              {plans.map(plan => (<Option key={plan.id} value={plan.id}>{plan.name} ({DIFFICULTY_LABELS[plan.difficulty]})</Option>))}
             </Select>
           </Form.Item>
-
           <Form.Item label="消耗热量（kcal）" name="calories_burned">
             <InputNumber min={10} max={5000} style={{ width: '100%' }} placeholder="200" />
           </Form.Item>
+        </Form>
 
+        <Divider>训练动作 & 组数</Divider>
+
+        {workoutSets.map((set, index) => (
+          <Row gutter={8} key={index} style={{ marginBottom: 8 }} align="middle">
+            <Col span={1}><Text type="secondary">{index + 1}</Text></Col>
+            <Col span={7}>
+              <Select
+                placeholder="选择动作"
+                value={set.exercise_id || undefined}
+                onChange={(v) => updateSet(index, 'exercise_id', v)}
+                style={{ width: '100%' }}
+                showSearch
+                optionFilterProp="children"
+              >
+                {exercises.map(ex => (
+                  <Option key={ex.id} value={ex.id}>{ex.name}</Option>
+                ))}
+              </Select>
+            </Col>
+            <Col span={4}>
+              <InputNumber
+                placeholder="重量kg"
+                min={0} max={500} step={0.5}
+                value={set.weight}
+                onChange={(v) => updateSet(index, 'weight', v || undefined)}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col span={3}>
+              <InputNumber
+                placeholder="次数"
+                min={1} max={100}
+                value={set.reps}
+                onChange={(v) => updateSet(index, 'reps', v || undefined)}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col span={4}>
+              <InputNumber
+                placeholder="休息秒"
+                min={0} max={600}
+                value={set.rest_seconds}
+                onChange={(v) => updateSet(index, 'rest_seconds', v || undefined)}
+                style={{ width: '100%' }}
+              />
+            </Col>
+            <Col span={1}>
+              <Button type="text" danger icon={<MinusCircleOutlined />} onClick={() => removeSet(index)} />
+            </Col>
+          </Row>
+        ))}
+        <Button type="dashed" onClick={addSet} block icon={<PlusOutlined />} style={{ marginBottom: 16 }}>
+          添加一组
+        </Button>
+
+        <Form form={form} layout="vertical">
           <Form.Item label="备注" name="notes">
-            <TextArea rows={4} placeholder="记录训练感受、突破等..." />
+            <TextArea rows={3} placeholder="记录训练感受、突破等..." />
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 详情弹窗 */}
       <Modal
-        title={
-          <Space>
-            <FileTextOutlined />
-            <span>训练详情</span>
-          </Space>
-        }
+        title={<Space><FileTextOutlined /><span>训练详情</span></Space>}
         open={detailVisible}
         onCancel={() => setDetailVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setDetailVisible(false)}>
-            关闭
-          </Button>,
-        ]}
-        width={600}
+        footer={[<Button key="close" onClick={() => setDetailVisible(false)}>关闭</Button>]}
+        width={700}
       >
         {viewingWorkout && (
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="训练日期" span={2}>
-              <Space>
-                <CalendarOutlined />
-                {new Date(viewingWorkout.workout_date).toLocaleDateString('zh-CN')}
-              </Space>
-            </Descriptions.Item>
-            <Descriptions.Item label="训练计划" span={2}>
-              {viewingWorkout.plan_name ? (
-                <Tag icon={<AimOutlined />} color="blue">
-                  {viewingWorkout.plan_name}
-                  {viewingWorkout.plan_id && plans.find(p => p.id === viewingWorkout.plan_id) && (
-                    <span style={{ marginLeft: 8 }}>
-                      ({DIFFICULTY_LABELS[plans.find(p => p.id === viewingWorkout.plan_id)!.difficulty]})
-                    </span>
-                  )}
-                </Tag>
-              ) : (
-                <Text type="secondary">自由训练</Text>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="训练时长">
-              <Space>
-                <ClockCircleOutlined />
-                <Text>{viewingWorkout.duration_minutes} 分钟</Text>
-              </Space>
-            </Descriptions.Item>
-            <Descriptions.Item label="消耗热量">
-              {viewingWorkout.calories_burned ? (
-                <Space>
-                  <FireOutlined style={{ color: '#E91E63' }} />
-                  <Text>{viewingWorkout.calories_burned} kcal</Text>
-                </Space>
-              ) : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="训练强度" span={2}>
-              <Tag color={getIntensityColor(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}>
-                {getIntensityLabel(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}
-              </Tag>
-            </Descriptions.Item>
-            {viewingWorkout.notes && (
-              <Descriptions.Item label="备注" span={2}>
-                <Text>{viewingWorkout.notes}</Text>
+          <>
+            <Descriptions column={2} bordered size="small">
+              <Descriptions.Item label="训练日期" span={2}>
+                <Space><CalendarOutlined />{new Date(viewingWorkout.workout_date).toLocaleDateString('zh-CN')}</Space>
               </Descriptions.Item>
+              <Descriptions.Item label="训练计划" span={2}>
+                {viewingWorkout.plan_name ? <Tag color="blue">{viewingWorkout.plan_name}</Tag> : <Text type="secondary">自由训练</Text>}
+              </Descriptions.Item>
+              <Descriptions.Item label="训练时长"><Space><ClockCircleOutlined />{viewingWorkout.duration_minutes} 分钟</Space></Descriptions.Item>
+              <Descriptions.Item label="消耗热量">
+                {viewingWorkout.calories_burned ? <Space><FireOutlined style={{ color: '#E91E63' }} />{viewingWorkout.calories_burned} kcal</Space> : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="训练强度" span={2}>
+                <Tag color={getIntensityColor(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}>
+                  {getIntensityLabel(viewingWorkout.duration_minutes, viewingWorkout.calories_burned)}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+
+            {viewingWorkout.sets && viewingWorkout.sets.length > 0 && (
+              <>
+                <Divider orientation="left" style={{ fontSize: 14 }}>训练组数</Divider>
+                <Table
+                  size="small"
+                  pagination={false}
+                  dataSource={viewingWorkout.sets}
+                  rowKey="id"
+                  columns={[
+                    { title: '#', dataIndex: 'set_order', width: 40 },
+                    { title: '动作', dataIndex: 'exercise_name', render: (name: string, record: WorkoutSet) => (
+                      <Space>
+                        <ThunderboltOutlined />
+                        <Text strong>{name}</Text>
+                        <Tag style={{ fontSize: 10 }}>{MUSCLE_GROUP_LABELS[record.muscle_group || ''] || ''}</Tag>
+                      </Space>
+                    )},
+                    { title: '重量', dataIndex: 'weight', width: 80, render: (v: number) => v ? `${v} kg` : '-' },
+                    { title: '次数', dataIndex: 'reps', width: 60, render: (v: number) => v || '-' },
+                    { title: '休息', dataIndex: 'rest_seconds', width: 70, render: (v: number) => v ? `${v}s` : '-' },
+                  ]}
+                />
+              </>
             )}
-            <Descriptions.Item label="记录时间" span={2}>
-              <Space>
-                <CalendarOutlined />
-                {new Date(viewingWorkout.created_at).toLocaleString('zh-CN')}
-              </Space>
-            </Descriptions.Item>
-          </Descriptions>
+
+            {viewingWorkout.notes && (
+              <div style={{ marginTop: 16 }}>
+                <Text type="secondary">备注：</Text>
+                <Text>{viewingWorkout.notes}</Text>
+              </div>
+            )}
+          </>
         )}
       </Modal>
     </div>
