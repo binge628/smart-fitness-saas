@@ -18,6 +18,9 @@ import {
   Tag,
   Descriptions,
   Divider,
+  Calendar,
+  Badge,
+  Segmented,
 } from 'antd';
 import {
   PlusOutlined,
@@ -31,6 +34,7 @@ import {
   FileTextOutlined,
   MinusCircleOutlined,
   ThunderboltOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import type { WorkoutLog, FitnessPlan, Exercise, WorkoutSet } from '../types';
 import { workoutService, planService, exerciseService } from '../services/api';
@@ -64,6 +68,7 @@ const WorkoutsPage: React.FC = () => {
   const [editingWorkout, setEditingWorkout] = useState<WorkoutLog | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<WorkoutLog | null>(null);
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   // 组数临时状态
   const [workoutSets, setWorkoutSets] = useState<Array<{
     exercise_id: string;
@@ -103,8 +108,15 @@ const WorkoutsPage: React.FC = () => {
 
   const loadPlans = async () => {
     try {
-      const res = await planService.getMyPlans();
-      setPlans(res.data || []);
+      // 同时获取我的计划和预设模板
+      const [myPlansRes, templatesRes] = await Promise.all([
+        planService.getMyPlans(),
+        planService.getPlans({ is_template: true }),
+      ]);
+      const myPlans = myPlansRes.data || [];
+      const templates = templatesRes.data || [];
+      // 预设模板在前，我的计划在后
+      setPlans([...templates, ...myPlans]);
     } catch (error) { /* silent */ }
   };
 
@@ -236,6 +248,64 @@ const WorkoutsPage: React.FC = () => {
   // 获取动作名
   const getExerciseName = (id: string) => exercises.find(e => e.id === id)?.name || '未知动作';
 
+  // 按日期分组训练记录
+  const getWorkoutsByDate = () => {
+    const map: Record<string, WorkoutLog[]> = {};
+    workouts.forEach(w => {
+      const dateKey = w.workout_date;
+      if (!map[dateKey]) map[dateKey] = [];
+      map[dateKey].push(w);
+    });
+    return map;
+  };
+  const workoutsByDate = getWorkoutsByDate();
+
+  // 获取某天的训练记录
+  const getWorkoutsForDate = (date: dayjs.Dayjs): WorkoutLog[] => {
+    const dateKey = date.format('YYYY-MM-DD');
+    return workoutsByDate[dateKey] || [];
+  };
+
+  // 日历单元格渲染
+  const dateCellRender = (date: dayjs.Dayjs) => {
+    const dayWorkouts = getWorkoutsForDate(date);
+    if (dayWorkouts.length === 0) return null;
+
+    const totalDuration = dayWorkouts.reduce((sum, w) => sum + w.duration_minutes, 0);
+    const totalCalories = dayWorkouts.reduce((sum, w) => sum + (w.calories_burned || 0), 0);
+
+    // 根据强度显示不同颜色
+    const intensity = totalCalories / totalDuration;
+    let statusColor = 'success';
+    if (intensity > 10) statusColor = 'error';
+    else if (intensity > 7) statusColor = 'warning';
+
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <Badge status={statusColor as any} />
+        <div style={{ fontSize: 10, color: '#666' }}>
+          {dayWorkouts.length}次 · {totalDuration}分钟
+        </div>
+      </div>
+    );
+  };
+
+  // 点击日期处理
+  const handleDateClick = (date: dayjs.Dayjs) => {
+    const dayWorkouts = getWorkoutsForDate(date);
+    if (dayWorkouts.length > 0) {
+      setViewingWorkout(dayWorkouts[0]);
+      setDetailVisible(true);
+    } else {
+      // 无训练的日期，点击快速创建
+      setEditingWorkout(null);
+      form.resetFields();
+      form.setFieldsValue({ workout_date: date, duration_minutes: 60 });
+      setWorkoutSets([]);
+      setModalVisible(true);
+    }
+  };
+
   const columns = [
     {
       title: '训练日期',
@@ -329,10 +399,34 @@ const WorkoutsPage: React.FC = () => {
               <Button onClick={() => { setDateRange(null); loadData(); }}>重置</Button>
             </Space>
           </Col>
-          <Col><Button type="default" onClick={loadData}>刷新</Button></Col>
+          <Col>
+            <Space>
+              <Segmented
+                options={[
+                  { label: <span><UnorderedListOutlined /> 列表</span>, value: 'table' },
+                  { label: <span><CalendarOutlined /> 日历</span>, value: 'calendar' },
+                ]}
+                value={viewMode}
+                onChange={(v) => setViewMode(v as 'table' | 'calendar')}
+              />
+              <Button type="default" onClick={loadData}>刷新</Button>
+            </Space>
+          </Col>
         </Row>
-        <Table rowKey="id" columns={columns} dataSource={workouts} loading={loading} scroll={{ x: 1400 }}
-          pagination={{ showSizeChanger: true, showTotal: (total) => `共 ${total} 条记录` }} />
+
+        {viewMode === 'table' ? (
+          <Table rowKey="id" columns={columns} dataSource={workouts} loading={loading} scroll={{ x: 1400 }}
+            pagination={{ showSizeChanger: true, showTotal: (total) => `共 ${total} 条记录` }} />
+        ) : (
+          <Calendar
+            fullscreen={true}
+            cellRender={(current, info) => {
+              if (info.type === 'date') return dateCellRender(current);
+              return info.originNode;
+            }}
+            onSelect={(date) => handleDateClick(date)}
+          />
+        )}
       </Card>
 
       {/* 创建/编辑弹窗 */}

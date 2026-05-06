@@ -19,6 +19,18 @@ export const createPlan = async (req: Request, res: Response) => {
 
     const creator_id = req.user!.userId;
 
+    // 检查名称是否重复（同一用户不能创建同名计划）
+    const checkResult = await pool.query(
+      'SELECT id FROM fitness_plans WHERE name = $1 AND creator_id = $2',
+      [name, creator_id]
+    );
+    if (checkResult.rowCount && checkResult.rowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        error: '您已存在同名计划，请使用其他名称',
+      });
+    }
+
     const result = await pool.query(
       `INSERT INTO fitness_plans (name, description, duration_weeks, difficulty, target_goal, creator_id, is_template, gym_id)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

@@ -78,7 +78,7 @@ export const createWorkoutSchema = z.object({
   workout_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式不正确，应为 YYYY-MM-DD'),
   duration_minutes: z.number().int('训练时长必须是整数').min(1, '训练时长至少1分钟').max(600, '训练时长最多600分钟'),
   calories_burned: z.number().int('消耗热量必须是整数').min(0, '消耗热量不能为负数').optional().nullable(),
-  notes: z.string().max(500, '备注最多500个字符').optional(),
+  notes: z.string().max(500, '备注最多500个字符').optional().nullable(),
   sets: z.array(workoutSetSchema).optional(),
 });
 

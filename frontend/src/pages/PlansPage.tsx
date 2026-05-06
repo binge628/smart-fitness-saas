@@ -59,13 +59,30 @@ const PlansPage: React.FC = () => {
     loadOriginalData();
   }, [filterMy]);
 
-  // 加载原始数据
+  // 加载原始数据（同时加载我的计划和预设模板，去重展示）
   const loadOriginalData = async () => {
     setLoading(true);
     try {
-      const res = filterMy ? await planService.getMyPlans() : await planService.getPlans();
-      setOriginalPlans(res.data || []);
-      setPlans(res.data || []);
+      let allPlans: FitnessPlan[] = [];
+
+      if (filterMy) {
+        // 只看我的计划
+        const res = await planService.getMyPlans();
+        allPlans = res.data || [];
+      } else {
+        // 同时获取我的计划和预设模板，去重
+        const [myPlansRes, templatesRes] = await Promise.all([
+          planService.getMyPlans(),
+          planService.getPlans({ is_template: true }),
+        ]);
+        const myPlans = myPlansRes.data || [];
+        const templates = (templatesRes.data || []) as FitnessPlan[];
+        // 合并并按创建时间排序（预设模板在前，我的计划在后）
+        allPlans = [...templates, ...myPlans];
+      }
+
+      setOriginalPlans(allPlans);
+      setPlans(allPlans);
     } catch (error) {
       message.error('加载健身计划失败');
     } finally {
@@ -163,6 +180,15 @@ const PlansPage: React.FC = () => {
   };
 
   const columns = [
+    {
+      title: '类型',
+      dataIndex: 'is_template',
+      key: 'is_template',
+      width: 90,
+      render: (isTemplate: boolean) => isTemplate ?
+        <Tag color="blue">预设模板</Tag> :
+        <Tag>我的计划</Tag>,
+    },
     {
       title: '计划名称',
       dataIndex: 'name',
