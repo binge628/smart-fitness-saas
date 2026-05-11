@@ -10,6 +10,7 @@ import {
   UserOutlined,
   ThunderboltOutlined,
   LogoutOutlined,
+  TrophyOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
 import { ROLES } from '../utils/permission';
@@ -73,6 +74,13 @@ const AppLayout: React.FC = () => {
     label: '动作库',
   };
 
+  // 成就菜单
+  const achievementMenuItem = {
+    key: '/achievements',
+    icon: <TrophyOutlined />,
+    label: '成就',
+  };
+
   // 个人资料菜单（所有角色可见）
   const profileMenuItem = {
     key: '/profile',
@@ -87,7 +95,7 @@ const AppLayout: React.FC = () => {
 
   // 健康数据和训练日志 - 仅普通用户和管理员能看到
   if (user && (user.role === ROLES.USER || user.role === ROLES.ADMIN)) {
-    menuItems.push(healthMenuItem, workoutMenuItem, exerciseMenuItem);
+    menuItems.push(healthMenuItem, workoutMenuItem, exerciseMenuItem, achievementMenuItem);
   }
 
   menuItems.push(profileMenuItem);

@@ -23,9 +23,11 @@ let poolConfig: any = {
 if (connectionString) {
   // 优先使用连接字符串
   poolConfig.connectionString = connectionString;
-  // Supabase 需要 SSL
-  poolConfig.ssl = { rejectUnauthorized: false };
-  console.log('🔗 使用 Supabase 连接字符串配置数据库 (SSL 启用)');
+  // 仅云数据库（supabase.co 等）需要 SSL
+  if (connectionString.includes('supabase.co') || connectionString.includes('amazonaws.com')) {
+    poolConfig.ssl = { rejectUnauthorized: false };
+  }
+  console.log('🔗 使用连接字符串配置数据库');
 } else {
   // 使用分离的配置项（用于本地 PostgreSQL）
   poolConfig.host = process.env.DB_HOST || 'localhost';

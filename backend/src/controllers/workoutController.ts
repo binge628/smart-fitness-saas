@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
+import { checkAndUnlockAchievements } from './achievementController';
 
 interface SetInput {
   exercise_id: string;
@@ -54,10 +55,15 @@ export const createWorkout = async (req: Request, res: Response) => {
 
     // 返回完整数据（含 sets）
     const fullResult = await getWorkoutWithSets(workout.id);
+
+    // 检查成就解锁
+    const newAchievements = await checkAndUnlockAchievements(userId);
+
     res.status(201).json({
       success: true,
       message: '训练日志创建成功',
        data: fullResult,
+      new_achievements: newAchievements.length > 0 ? newAchievements : undefined,
     });
   } catch (error) {
     await client.query('ROLLBACK');

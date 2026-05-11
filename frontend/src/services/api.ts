@@ -240,4 +240,19 @@ export const exerciseService = {
     apiClient.post<any, ApiResponse<Exercise>>('/exercises', data),
 };
 
+// 成就服务
+export const achievementService = {
+  // 获取成就列表（含解锁状态和进度）
+  getAchievements: () =>
+    apiClient.get<any, any>('/achievements'),
+
+  // 获取成就统计
+  getStats: () =>
+    apiClient.get<any, ApiResponse<{ total: number; unlocked: number; locked: number }>>('/achievements/stats'),
+
+  // 检查并解锁新成就
+  checkAchievements: () =>
+    apiClient.post<any, any>('/achievements/check'),
+};
+
 export default apiClient;
