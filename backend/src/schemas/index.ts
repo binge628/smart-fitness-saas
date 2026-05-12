@@ -169,3 +169,14 @@ export const paginationSchema = z.object({
 export const uuidParamSchema = z.object({
   id: z.string().uuid('ID格式不正确'),
 });
+
+// 订阅创建校验
+export const subscribeSchema = z.object({
+  plan_type: z.enum(['monthly', 'yearly'], {
+    message: '套餐类型必须是 monthly 或 yearly',
+  }),
+  payment_method: z.string().max(50, '支付方式最多50个字符').optional(),
+});
+
+// 订阅取消校验
+export const cancelSubscriptionSchema = z.object({});

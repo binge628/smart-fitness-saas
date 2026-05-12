@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog, Exercise, WorkoutSet } from '../types';
+import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog, Exercise, WorkoutSet, Subscription, SubscriptionPlan } from '../types';
 import { useAuthStore } from '../stores/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -253,6 +253,25 @@ export const achievementService = {
   // 检查并解锁新成就
   checkAchievements: () =>
     apiClient.post<any, any>('/achievements/check'),
+};
+
+// 订阅服务
+export const subscriptionService = {
+  // 获取套餐价格列表（公开）
+  getPlans: () =>
+    apiClient.get<any, ApiResponse<SubscriptionPlan[]>>('/subscriptions/plans'),
+
+  // 获取当前用户订阅
+  getMySubscription: () =>
+    apiClient.get<any, any>('/subscriptions/my'),
+
+  // 订阅/续费
+  subscribe: (data: { plan_type: 'monthly' | 'yearly'; payment_method?: string }) =>
+    apiClient.post<any, any>('/subscriptions/subscribe', data),
+
+  // 取消订阅
+  cancelSubscription: () =>
+    apiClient.put<any, ApiResponse<Subscription>>('/subscriptions/cancel'),
 };
 
 export default apiClient;

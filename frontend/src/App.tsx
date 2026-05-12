@@ -22,6 +22,7 @@ import HealthDataPage from './pages/HealthDataPage';
 import WorkoutsPage from './pages/WorkoutsPage';
 import ExercisesPage from './pages/ExercisesPage';
 import AchievementsPage from './pages/AchievementsPage';
+import SubscriptionPage from './pages/SubscriptionPage';
 import ProfilePage from './pages/ProfilePage';
 
 // 自定义主题 - 参考活力健身系统风格
@@ -89,6 +90,7 @@ function App() {
                 <Route path="/workouts" element={<WorkoutsPage />} />
                 <Route path="/exercises" element={<ExercisesPage />} />
                 <Route path="/achievements" element={<AchievementsPage />} />
+                <Route path="/subscription" element={<SubscriptionPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
 

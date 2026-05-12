@@ -119,6 +119,28 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+// 订阅类型
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan_type: 'free' | 'monthly' | 'yearly';
+  status: 'active' | 'cancelled' | 'expired';
+  start_date: string;
+  end_date?: string;
+  amount?: number;
+  payment_method?: string;
+  created_at: string;
+}
+
+// 订阅套餐类型
+export interface SubscriptionPlan {
+  plan_type: string;
+  name: string;
+  price: number;
+  duration_days: number;
+  features: string[];
+}
+
 // 认证响应类型
 export interface AuthResponse {
   user: User;
