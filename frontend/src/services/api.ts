@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog, Exercise, WorkoutSet, Subscription, SubscriptionPlan } from '../types';
+import type { ApiResponse, AuthResponse, User, FitnessPlan, Gym, GymMember, HealthData, WorkoutLog, Exercise, WorkoutSet, Subscription, SubscriptionPlan, AIMessage } from '../types';
 import { useAuthStore } from '../stores/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -272,6 +272,29 @@ export const subscriptionService = {
   // 取消订阅
   cancelSubscription: () =>
     apiClient.put<any, ApiResponse<Subscription>>('/subscriptions/cancel'),
+};
+
+// AI 助手服务
+export const aiService = {
+  // 检查 AI 服务状态
+  checkStatus: () =>
+    apiClient.get<any, ApiResponse<{ configured: boolean; provider: string }>>('/ai/status'),
+
+  // AI 对话
+  chat: (data: { message: string; type?: 'training' | 'nutrition' | 'plan' | 'general' }) =>
+    apiClient.post<any, ApiResponse<{ reply: string; is_fallback: boolean }>>('/ai/chat', data),
+
+  // 获取训练建议
+  getTrainingAdvice: (data?: { focus_area?: string }) =>
+    apiClient.post<any, ApiResponse<{ reply: string; is_fallback: boolean }>>('/ai/training-advice', data || {}),
+
+  // 获取营养建议
+  getNutritionAdvice: (data?: { focus_area?: string }) =>
+    apiClient.post<any, ApiResponse<{ reply: string; is_fallback: boolean }>>('/ai/nutrition-advice', data || {}),
+
+  // 获取计划推荐
+  getPlanSuggestion: () =>
+    apiClient.get<any, ApiResponse<{ reply: string; is_fallback: boolean }>>('/ai/plan-suggestion'),
 };
 
 export default apiClient;

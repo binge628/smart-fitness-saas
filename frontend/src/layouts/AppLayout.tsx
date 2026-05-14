@@ -12,6 +12,7 @@ import {
   LogoutOutlined,
   TrophyOutlined,
   CrownOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../stores/authStore';
 import { ROLES } from '../utils/permission';
@@ -89,6 +90,13 @@ const AppLayout: React.FC = () => {
     label: '会员',
   };
 
+  // AI 助手菜单
+  const aiAssistantMenuItem = {
+    key: '/ai-assistant',
+    icon: <RobotOutlined />,
+    label: 'AI 助手',
+  };
+
   // 个人资料菜单（所有角色可见）
   const profileMenuItem = {
     key: '/profile',
@@ -103,7 +111,7 @@ const AppLayout: React.FC = () => {
 
   // 健康数据和训练日志 - 仅普通用户和管理员能看到
   if (user && (user.role === ROLES.USER || user.role === ROLES.ADMIN)) {
-    menuItems.push(healthMenuItem, workoutMenuItem, exerciseMenuItem, achievementMenuItem, subscriptionMenuItem);
+    menuItems.push(healthMenuItem, workoutMenuItem, exerciseMenuItem, achievementMenuItem, subscriptionMenuItem, aiAssistantMenuItem);
   }
 
   menuItems.push(profileMenuItem);

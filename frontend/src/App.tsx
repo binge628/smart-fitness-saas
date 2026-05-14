@@ -23,6 +23,7 @@ import WorkoutsPage from './pages/WorkoutsPage';
 import ExercisesPage from './pages/ExercisesPage';
 import AchievementsPage from './pages/AchievementsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
+import AIAssistantPage from './pages/AIAssistantPage';
 import ProfilePage from './pages/ProfilePage';
 
 // 自定义主题 - 参考活力健身系统风格
@@ -91,6 +92,7 @@ function App() {
                 <Route path="/exercises" element={<ExercisesPage />} />
                 <Route path="/achievements" element={<AchievementsPage />} />
                 <Route path="/subscription" element={<SubscriptionPage />} />
+                <Route path="/ai-assistant" element={<AIAssistantPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
 

@@ -1,6 +1,21 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// 扩展 Express Request 类型
+import { JwtPayload } from 'jsonwebtoken';
+declare global {
+  namespace Express {
+    interface Request {
+      user?: JwtPayload & {
+        userId: string;
+        username: string;
+        email: string;
+        role: string;
+      };
+    }
+  }
+}
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -14,6 +29,7 @@ import workoutRoutes from './routes/workoutRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
 import achievementRoutes from './routes/achievementRoutes';
 import subscriptionRoutes from './routes/subscriptionRoutes';
+import aiRoutes from './routes/aiRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import SwaggerDoc from '../swagger';
 
@@ -27,7 +43,11 @@ app.use((req, res, next) => {
 });
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
+  ],
   credentials: true,
 }));
 // 增加请求体大小限制以支持 base64 头像上传
@@ -67,6 +87,7 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/achievements', achievementRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 处理
 app.use((req, res) => {
@@ -85,7 +106,7 @@ app.use(errorHandler);
 SwaggerDoc(app);
 
 // 启动服务器
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on: http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`API Docs: http://localhost:${PORT}/api-docs`);
@@ -98,3 +119,7 @@ app.listen(PORT, () => {
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`========================================\n`);
 });
+
+// 测试环境导出 app 实例
+export { app, server };
+export default app;

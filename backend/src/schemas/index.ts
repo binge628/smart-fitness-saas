@@ -180,3 +180,14 @@ export const subscribeSchema = z.object({
 
 // 订阅取消校验
 export const cancelSubscriptionSchema = z.object({});
+
+// AI 对话校验
+export const aiChatSchema = z.object({
+  message: z.string().min(1, '消息不能为空').max(500, '消息最多500个字符'),
+  type: z.enum(['training', 'nutrition', 'plan', 'general']).optional(),
+});
+
+// AI 建议请求校验
+export const aiAdviceSchema = z.object({
+  focus_area: z.string().max(100, '关注领域最多100个字符').optional(),
+});

@@ -146,3 +146,22 @@ export interface AuthResponse {
   user: User;
   token: string;
 }
+
+// AI 对话消息类型
+export interface AIMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  is_fallback?: boolean;
+}
+
+// AI 对话类型
+export interface AIConversation {
+  id: string;
+  user_id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  conversation_id?: string;
+  created_at: string;
+}
