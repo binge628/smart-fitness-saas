@@ -94,6 +94,16 @@ docker-compose logs -f
 docker-compose down
 ```
 
+### Windows 用户
+
+Windows 用户请参考详细指南：**[docs/WINDOWS_SETUP.md](docs/WINDOWS_SETUP.md)**
+
+主要内容：
+- 方式一：Docker Desktop 一键启动（推荐）
+- 方式二：本地环境部署（Node.js + PostgreSQL）
+- 常见问题解决（WSL2、端口占用、权限问题等）
+- 推荐开发工具
+
 ## 项目结构
 
 ## 技术栈
