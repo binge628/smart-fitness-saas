@@ -2,83 +2,143 @@
 
 基于 SaaS 模式的智慧健身管理系统，支持个性化健身计划、数据采集分析、健身房管理等核心功能。
 
-## 项目结构
-
-```
-smart-fitness-saas/
-├── frontend/          # 前端项目（React + TypeScript + Vite）
-├── backend/           # 后端项目（Node.js + Express + TypeScript）
-├── docs/              # 项目文档
-├── scripts/           # 工具脚本
-└── docker/            # Docker 配置（待添加）
-```
-
-## 技术栈
-
-### 前端
-- 框架：React 18 + TypeScript
-- 构建工具：Vite
-- UI 组件库：Ant Design
-- 路由：React Router v6
-- 状态管理：Zustand
-- HTTP 客户端：Axios
-- 日期处理：Day.js
-
-### 后端
-- 框架：Express + TypeScript
-- 数据库：PostgreSQL
-- 认证：JWT
-- 密码加密：Bcryptjs
-- 跨域：CORS
-- 环境变量：dotenv
-
 ## 快速开始
 
-### 前置要求
-- Node.js >= 18
-- PostgreSQL >= 14
+### 第一步：下载依赖
 
-### 前端启动
-
+**前端依赖**
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
 
-访问：http://localhost:5173
-
-### 后端启动
-
-**方式 A：Supabase 云数据库（推荐，跨系统通用）**
-
+**后端依赖**
 ```bash
 cd backend
-# 1. 注册 Supabase 并获取连接字符串：https://supabase.com
-# 2. 修改 .env 中的 DATABASE_URL
-# 3. 在 Supabase SQL Editor 运行 db/init.sql
-# 4. 启动服务
-npm run dev
+npm install
 ```
 
-详细说明：[docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md)
+### 第二步：配置数据库
 
-**方式 B：本地 PostgreSQL**
+有两种方式配置数据库：
 
+**方式 1：使用 Docker 启动 PostgreSQL（推荐）**
 ```bash
-# macOS 安装 PostgreSQL
+# 在项目根目录执行
+docker-compose up -d postgres
+```
+
+**方式 2：使用 Supabase 云数据库（推荐）**
+1. 访问 https://supabase.com 注册账号
+2. 创建新项目，获取数据库连接字符串
+3. 修改 `backend/.env` 中的 `DATABASE_URL`
+
+**方式 3：本地安装 PostgreSQL**
+```bash
+# macOS
 brew install postgresql@16
 brew services start postgresql@16
 
 # 初始化数据库
 cd backend
 ./scripts/init-db.sh
-
-# 启动服务
-npm run dev
 ```
 
+### 第三步：配置环境变量
+
+**后端配置**
+```bash
+cd backend
+cp .env.example .env
+# 编辑 .env 文件，配置数据库连接、JWT 密钥等
+```
+
+关键配置项：
+- `DATABASE_URL` - 数据库连接字符串
+- `JWT_SECRET` - JWT 密钥（生产环境请修改）
+- `CLIENT_URL` - 前端地址（CORS）
+- `AI_API_KEY` - AI 供应商 API 密钥（可选）
+
+**前端配置**
+```bash
+cd frontend
+# 前端无需额外配置，直接使用默认配置即可
+```
+
+### 第四步：启动服务
+
+**启动后端**
+```bash
+cd backend
+npm run dev
+```
 访问：http://localhost:3001
+
+**启动前端**
+```bash
+cd frontend
+npm run dev
+```
+访问：http://localhost:5173
+
+### 使用 Docker 一键启动（可选）
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+## 项目结构
+
+## 技术栈
+
+### 前端
+- 框架：React 19 + TypeScript
+- 构建工具：Vite 8
+- UI 组件库：Ant Design 6
+- 路由：React Router v7
+- 状态管理：Zustand
+- HTTP 客户端：Axios
+- 日期处理：Day.js
+- 测试：Vitest + React Testing Library
+
+### 后端
+- 框架：Express 5 + TypeScript
+- 数据库：PostgreSQL 15
+- 认证：JWT
+- 密码加密：Bcryptjs
+- 跨域：CORS
+- 环境变量：dotenv
+- 文档：Swagger/OpenAPI
+- 测试：Jest + Supertest
+
+## 前置要求
+
+- Node.js >= 18（推荐 v20）
+- PostgreSQL >= 15（本地开发或使用本地数据库时需要）
+- npm >= 9
+
+### 开发环境启动
+
+**推荐开发模式**：前后端分离开发，热重载
+
+```bash
+# 终端 1：启动后端
+cd backend
+npm install  # 首次需要安装依赖
+npm run dev
+
+# 终端 2：启动前端
+cd frontend
+npm install  # 首次需要安装依赖
+npm run dev
+```
 
 ## 核心功能模块
 
@@ -89,6 +149,72 @@ npm run dev
 | 健身房管理 | ✅ 已完成 | ✅ 已完成 | 健身房CRUD + 会员管理 + 我的会员 |
 | 健康数据 | ✅ 已完成 | ✅ 已完成 | 体重/体脂率等健康指标 + BMI计算 + 统计 + 趋势 |
 | 训练日志 | ✅ 已完成 | ✅ 已完成 | 训练记录 + 训练统计 + 强度计算 |
+| AI 健身助手 | ✅ 已完成 | ✅ 已完成 | 基于 LLM 的健身咨询（支持 OpenAI/Claude/DeepSeek/Ollama） |
+
+## 数据库配置详解
+
+### 环境变量说明
+
+后端支持两种数据库配置方式，在 `backend/.env` 中配置：
+
+**方式 1：PostgreSQL URI（推荐，适用于 Supabase 或 Docker）**
+```env
+DATABASE_URL=postgres://user:password@host:port/database
+```
+
+**方式 2：本地 PostgreSQL 分参数配置**
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=smart_fitness
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
+### 数据库初始化
+
+使用 Docker 启动后，数据库会自动初始化。本地 PostgreSQL 需要手动执行初始化脚本：
+
+```bash
+cd backend
+psql -U postgres -f db/init.sql
+```
+
+### AI 健身助手配置（可选）
+
+在 `backend/.env` 中配置：
+
+```env
+# LLM 供应商：openai | anthropic | deepseek | ollama
+AI_PROVIDER=openai
+AI_API_KEY=sk-xxx  # API 密钥
+AI_MODEL=gpt-4o-mini  # 模型名称
+AI_BASE_URL=  # 自定义端点（Ollama: http://localhost:11434/v1）
+AI_MAX_TOKENS=1000
+AI_TEMPERATURE=0.7
+AI_DAILY_LIMIT=20  # 每日对话次数限制
+```
+
+## 常用脚本命令
+
+### 后端
+```bash
+cd backend
+npm run dev      # 开发模式（热重载）
+npm run build    # 编译 TypeScript
+npm run start    # 启动生产环境
+npm run test     # 运行测试
+```
+
+### 前端
+```bash
+cd frontend
+npm run dev       # 开发模式（热重载）
+npm run build     # 编译生产版本
+npm run preview   # 预览生产构建
+npm run lint      # ESLint 检查
+npm run test      # 运行测试
+```
 
 ## 开发进度
 
@@ -139,6 +265,23 @@ npm run dev
 - [ ] 单元测试与集成测试
 - [ ] 部署配置（Docker、CI/CD）
 - [ ] [可选] 支付集成（微信支付/支付宝）
+
+## 无用文件说明
+
+以下文件或目录目前为空或仅用于临时用途，可以安全删除：
+
+| 文件/目录 | 说明 | 是否可删除 |
+|-----------|------|------------|
+| `paper/` | 空目录，原本用于存放论文相关资料 | ✅ 可删除 |
+| `scripts/` | 空目录，原本用于存放工具脚本 | ✅ 可删除（如需要可重新创建） |
+| `zBakeryData/` | 空目录，包含空的 `.db` 和 `.env` 子目录 | ✅ 可删除 |
+| `OPTIMIZATION_PLAN.md` | 优化计划文档，已完成所有优化项目 | ⚠️ 建议保留作为历史记录 |
+
+删除命令：
+```bash
+# 在项目根目录执行
+rm -rf paper/ scripts/ zBakeryData/
+```
 
 ## License
 
