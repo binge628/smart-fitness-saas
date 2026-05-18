@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { Spin } from 'antd';
 import { useAuthStore } from '../stores/authStore';
 
 export interface AuthGuardProps {
@@ -12,10 +13,20 @@ export interface AuthGuardProps {
 /**
  * 认证守卫组件
  * 用于保护需要登录或特定角色的路由
+ * hydrate 时会验证 token 有效性，验证期间显示 loading
  */
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) => {
   const location = useLocation();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isValidating } = useAuthStore();
+
+  // token 正在验证中，显示加载状态
+  if (isValidating) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip="验证登录状态..." />
+      </div>
+    );
+  }
 
   // 检查是否已登录
   if (!isAuthenticated) {
@@ -38,7 +49,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) 
  */
 export const PublicAuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isValidating } = useAuthStore();
+
+  // token 正在验证中，显示加载状态
+  if (isValidating) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" tip="验证登录状态..." />
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     const from = (location.state as { from?: string })?.from || '/';

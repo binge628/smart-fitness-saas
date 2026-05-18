@@ -27,6 +27,12 @@ apiClient.interceptors.request.use(
   }
 );
 
+// 防止 401 时多次重定向
+let isRedirecting = false;
+
+// 不需要自动跳转登录页的接口（这些接口的 401 是业务预期，如密码错误）
+const AUTH_URLS = ['/auth/login', '/auth/register'];
+
 // 响应拦截器 - 统一处理错误
 apiClient.interceptors.response.use(
   (response) => {
@@ -35,8 +41,19 @@ apiClient.interceptors.response.use(
   (error) => {
     console.error('[API Error]', error.response?.data || error.message);
     if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
-      window.location.href = '/login';
+      const requestUrl = error.config?.url || '';
+      // 登录/注册接口的 401 是业务错误（密码错误等），不跳转，让页面自行处理
+      const isAuthEndpoint = AUTH_URLS.some(url => requestUrl.includes(url));
+
+      if (!isAuthEndpoint && !isRedirecting) {
+        isRedirecting = true;
+        useAuthStore.getState().logout();
+        // 使用 setTimeout 避免在并发请求时多次执行
+        setTimeout(() => {
+          window.location.href = '/login';
+          isRedirecting = false;
+        }, 0);
+      }
     }
     return Promise.reject(error.response?.data || error.message);
   }

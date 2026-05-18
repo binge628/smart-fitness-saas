@@ -258,15 +258,15 @@ export const getUserById = async (req: Request, res: Response) => {
  */
 export const updateCurrentUser = async (req: Request, res: Response) => {
   try {
-    const { username, email, phone, avatar } = req.body;
-    const userId = req.user!.userId;
-
     if (!req.user) {
       return res.status(401).json({
         success: false,
         error: '未认证',
       });
     }
+
+    const { username, email, phone, avatar } = req.body;
+    const userId = req.user.userId;
 
     // 检查用户名或邮箱是否已被其他用户使用
     if (username || email) {

@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
         message.success('登录成功！');
         setShouldRedirect(true);
       } else {
-        message.error(response.message || '登录失败');
+        message.error(response.error || '登录失败');
       }
     } catch (error: any) {
       message.error(error?.error || '登录失败，请检查用户名和密码');

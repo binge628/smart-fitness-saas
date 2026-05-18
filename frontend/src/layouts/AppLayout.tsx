@@ -25,7 +25,9 @@ const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { user, logout } = useAuthStore();
+  // 使用选择器确保组件在 store 变化时重新渲染
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   // 退出登录
   const handleLogout = () => {
